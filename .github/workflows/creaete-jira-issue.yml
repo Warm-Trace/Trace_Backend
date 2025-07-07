@@ -86,12 +86,12 @@ jobs:
         if: steps.create.outputs.issue != ''
         run: echo "Jira Issue ${{ steps.create.outputs.issue }} was created"
 
-      - name: Create branch with Ticket number
-        run: |
-              GITHUB_ISSUE_NUMBER="${{ github.event.issue.number }}"
+      # - name: Create branch with Ticket number
+      #   run: |
+      #         GITHUB_ISSUE_NUMBER="${{ github.event.issue.number }}"
         
-              git checkout -b ${{ steps.create.outputs.issue }}
-              git push origin ${{ steps.create.outputs.issue }}
+      #         git checkout -b ${{ steps.create.outputs.issue }}
+      #         git push origin ${{ steps.create.outputs.issue }}
 
       - name: Define ISSUE_NUMBER fallback
         run: |
