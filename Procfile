@@ -1,1 +1,1 @@
-web: java -Duser.timezone=Asia/Seoul -jar *.jar
+web: java -Xms256m -Xmx256m -jar *.jar
