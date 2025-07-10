@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum ReportReason {
 
+    // 신고 사유
     INSULT("욕설/비방/인신공격"),
     ILLEGAL("불법/범죄/불건전한 내용"),
     LEWD("음란/선정/불쾌한 내용"),
