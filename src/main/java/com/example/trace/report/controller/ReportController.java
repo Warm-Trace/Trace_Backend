@@ -36,7 +36,7 @@ public class ReportController {
     public ResponseEntity<Void> blockUser(@AuthenticationPrincipal PrincipalDetails principalDetails, @PathVariable Long blockedId) {
         Long blockerId = principalDetails.getUser().getId();
         userBlockService.blockUser(blockerId, blockedId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/unblock/{blockedId}")
@@ -44,6 +44,6 @@ public class ReportController {
     public ResponseEntity<Void> unblockUser(@AuthenticationPrincipal PrincipalDetails principalDetails, @PathVariable Long blockedId) {
         Long blockerId = principalDetails.getUser().getId();
         userBlockService.unblockUser(blockerId, blockedId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }
