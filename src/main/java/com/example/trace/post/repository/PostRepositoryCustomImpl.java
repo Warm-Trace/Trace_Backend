@@ -18,15 +18,17 @@ import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
 
 import static com.example.trace.emotion.QEmotion.emotion;
 import static com.example.trace.post.domain.QComment.comment;
 import static com.example.trace.post.domain.QPost.post;
 import static com.example.trace.post.domain.QPostImage.postImage;
+import static com.example.trace.report.domain.QUserBlock.userBlock;
 
 @Slf4j
-public class PostRepositoryCustomImpl implements PostRepositoryCustom{
+public class PostRepositoryCustomImpl implements PostRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     // 생성자 주입
@@ -34,8 +36,32 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom{
         this.queryFactory = new JPAQueryFactory(entityManager);
     }
 
+    private BooleanExpression postUserNotBlocked(String currentUserProviderId) {
+        if (currentUserProviderId == null || currentUserProviderId.trim().isEmpty()) {
+            return Expressions.TRUE;
+        }
+        return post.user.providerId.notIn(
+                JPAExpressions
+                        .select(userBlock.blocked.providerId)
+                        .from(userBlock)
+                        .where(userBlock.blocker.providerId.eq(currentUserProviderId))
+        );
+    }
+
+    private BooleanExpression commentUserNotBlocked(String currentUserProviderId) {
+        if (currentUserProviderId == null || currentUserProviderId.trim().isEmpty()) {
+            return Expressions.TRUE;
+        }
+        return comment.user.providerId.notIn(
+                JPAExpressions
+                        .select(userBlock.blocked.providerId)
+                        .from(userBlock)
+                        .where(userBlock.blocker.providerId.eq(currentUserProviderId))
+        );
+    }
+
     private BooleanExpression postTypeEq(PostType postType) {
-        if(postType == null) return Expressions.TRUE;
+        if (postType == null) return Expressions.TRUE;
         String stringPostType = postType.name();
         return post.postType.stringValue().eq(stringPostType);
     }
@@ -72,14 +98,13 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom{
                     )
             );
 
-    private BooleanExpression isOwnerExpr(String providerId){
+    private BooleanExpression isOwnerExpr(String providerId) {
         BooleanExpression isOwnerExpr = Expressions.cases()
                 .when(post.user.providerId.eq(providerId))
                 .then(true)
                 .otherwise(false);
         return isOwnerExpr;
     }
-
 
 
     private BooleanExpression postCursorCondition(LocalDateTime cursorDateTime, Long cursorId) {
@@ -161,7 +186,8 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom{
                 .leftJoin(post.verification) // verification 조인 추가
                 .where(
                         postTypeEq(postType),
-                        postCursorCondition(cursorDateTime, cursorId)
+                        postCursorCondition(cursorDateTime, cursorId),
+                        postUserNotBlocked(providerId)
                 )
                 .orderBy(post.createdAt.desc(), post.id.desc())
                 .limit(size + 1)
@@ -205,15 +231,13 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom{
                 .where(
                         postTypeEq(postType),
                         postCursorCondition(cursorDateTime, cursorId),
-                        searchCondition(keyword, searchType) // 새로 추가할 검색 조건
+                        searchCondition(keyword, searchType), // 새로 추가할 검색 조건
+                        postUserNotBlocked(providerId)
                 )
                 .orderBy(post.createdAt.desc(), post.id.desc())
                 .limit(size + 1)
                 .fetch();
     }
-
-
-
 
 
     public List<Long> findParentCommentsIdWithCursor(
@@ -222,7 +246,7 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom{
             Long postId,
             int size,
             String providerId
-    ){
+    ) {
         QPost post = QPost.post;
         QComment comment = QComment.comment;
 
@@ -232,7 +256,8 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom{
                 .where(
                         comment.post.id.eq(postId),
                         comment.parent.isNull(), // 부모 댓글만
-                        commentCursorCondition(cursorDateTime, cursorId)
+                        commentCursorCondition(cursorDateTime, cursorId),
+                        commentUserNotBlocked(providerId) // 댓글 작성자가 차단되지 않은 경우
                 )
                 .orderBy(comment.createdAt.asc(), comment.id.asc())
                 .limit(size)
@@ -241,8 +266,8 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom{
         if (parentCommentIds.isEmpty()) {
             return Collections.emptyList();
         }
-        for(Long id : parentCommentIds){
-            log.info("부모 id {}",id);
+        for (Long id : parentCommentIds) {
+            log.info("부모 id {}", id);
         }
         return parentCommentIds;
     }
@@ -251,7 +276,7 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom{
     public List<CommentDto> findComments(
             List<Long> parentCommentIds,
             String providerId
-    ){
+    ) {
         QComment comment = QComment.comment;
 
         List<CommentDto> allComments = queryFactory
@@ -270,7 +295,8 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom{
                 .from(comment)
                 .leftJoin(comment.user)
                 .where(
-                        comment.id.in(parentCommentIds).or(comment.parent.id.in(parentCommentIds))
+                        comment.id.in(parentCommentIds).or(comment.parent.id.in(parentCommentIds)),
+                        commentUserNotBlocked(providerId)
                 )
                 .orderBy(comment.parent.id.asc().nullsFirst(),
                         comment.createdAt.asc())
@@ -351,16 +377,16 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom{
                 .leftJoin(post.user)
                 .leftJoin(post.verification)
                 .where(
-                    post.id.in(
-                        JPAExpressions
-                            .select(comment.post.id)
-                            .from(comment)
-                            .where(
-                                comment.user.providerId.eq(providerId),
-                                comment.isDeleted.eq(false)
-                            )
-                    ),
-                    postCursorCondition(cursorDateTime, cursorId)
+                        post.id.in(
+                                JPAExpressions
+                                        .select(comment.post.id)
+                                        .from(comment)
+                                        .where(
+                                                comment.user.providerId.eq(providerId),
+                                                comment.isDeleted.eq(false)
+                                        )
+                        ),
+                        postCursorCondition(cursorDateTime, cursorId)
                 )
                 .orderBy(post.createdAt.desc(), post.id.desc())
                 .limit(size + 1)
@@ -401,13 +427,13 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom{
                 .leftJoin(post.user)
                 .leftJoin(post.verification)
                 .where(
-                    post.id.in(
-                        JPAExpressions
-                            .select(emotion.post.id)
-                            .from(emotion)
-                            .where(emotion.user.providerId.eq(providerId))
-                    ),
-                    postCursorCondition(cursorDateTime, cursorId)
+                        post.id.in(
+                                JPAExpressions
+                                        .select(emotion.post.id)
+                                        .from(emotion)
+                                        .where(emotion.user.providerId.eq(providerId))
+                        ),
+                        postCursorCondition(cursorDateTime, cursorId)
                 )
                 .orderBy(post.createdAt.desc(), post.id.desc())
                 .limit(size + 1)
