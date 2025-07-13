@@ -27,7 +27,7 @@ public class AdminReportResponse {
         return AdminReportResponse.builder()
                 .reportId(report.getId())
                 .reporterName(report.getReporter().getNickname())
-                .reportId(report.getReporter().getId())
+                .reporterId(report.getReporter().getId())
                 .contentId(contentId)
                 .contentType(contentType)
                 .reason(report.getReason())
