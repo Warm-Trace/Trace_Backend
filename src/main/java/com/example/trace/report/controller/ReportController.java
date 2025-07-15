@@ -26,24 +26,24 @@ public class ReportController {
     public ResponseEntity<ApiResponse> createReport(
             @AuthenticationPrincipal PrincipalDetails principalDetails,
             @RequestBody ReportRequest request) {
-        reportService.createReport(principalDetails.getUser().getId(), request);
+        reportService.createReport(principalDetails.getUser().getProviderId(), request);
         return ResponseEntity.ok(ApiResponse.success("신고가 성공적으로 접수되었습니다."));
     }
 
 
     @PostMapping("/block/{blockedId}")
     @Operation(summary = "사용자 차단", description = "사용자를 차단합니다.")
-    public ResponseEntity<Void> blockUser(@AuthenticationPrincipal PrincipalDetails principalDetails, @PathVariable Long blockedId) {
-        Long blockerId = principalDetails.getUser().getId();
-        userBlockService.blockUser(blockerId, blockedId);
+    public ResponseEntity<Void> blockUser(@AuthenticationPrincipal PrincipalDetails principalDetails, @PathVariable String blockedProviderId) {
+        String blockerProviderId = principalDetails.getUser().getProviderId();
+        userBlockService.blockUser(blockerProviderId, blockedProviderId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/unblock/{blockedId}")
     @Operation(summary = "사용자 차단 해제", description = "차단된 사용자의 차단을 해제합니다.")
-    public ResponseEntity<Void> unblockUser(@AuthenticationPrincipal PrincipalDetails principalDetails, @PathVariable Long blockedId) {
-        Long blockerId = principalDetails.getUser().getId();
-        userBlockService.unblockUser(blockerId, blockedId);
+    public ResponseEntity<Void> unblockUser(@AuthenticationPrincipal PrincipalDetails principalDetails, @PathVariable String blockedProviderId) {
+        String blockerProviderId = principalDetails.getUser().getProviderId();
+        userBlockService.unblockUser(blockerProviderId, blockedProviderId);
         return ResponseEntity.noContent().build();
     }
 }

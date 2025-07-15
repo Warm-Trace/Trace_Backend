@@ -26,8 +26,8 @@ public class ReportService {
     private final CommentRepository commentRepository;
 
     @Transactional
-    public void createReport(Long reporterId, ReportRequest request) {
-        User reporter = userRepository.findById(reporterId)
+    public void createReport(String providerId, ReportRequest request) {
+        User reporter = userRepository.findByProviderId(providerId)
                 .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
 
         if (request.getPostId() != null && request.getCommentId() == null) {
@@ -43,7 +43,7 @@ public class ReportService {
         Post post = postRepository.findById(request.getPostId())
                 .orElseThrow(() -> new ReportException(ReportErrorCode.POST_NOT_FOUND));
 
-        if (post.getUser().getId().equals(reporter.getId())) {
+        if (post.getUser().getProviderId().equals(reporter.getProviderId())) {
             throw new ReportException(ReportErrorCode.CANNOT_REPORT_YOUR_OWN_CONTENT);
         }
 
@@ -63,7 +63,7 @@ public class ReportService {
         Comment comment = commentRepository.findById(request.getCommentId())
                 .orElseThrow(() -> new ReportException(ReportErrorCode.COMMENT_NOT_FOUND));
 
-        if (comment.getUser().getId().equals(reporter.getId())) {
+        if (comment.getUser().getProviderId().equals(reporter.getProviderId())) {
             throw new ReportException(ReportErrorCode.CANNOT_REPORT_YOUR_OWN_CONTENT);
         }
 
