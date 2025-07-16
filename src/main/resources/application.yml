@@ -90,6 +90,19 @@ logging:
 
 firebase:
   config-path: firebase/firebase_service_key.json
+
+# 메트릭/Actuator 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
 ---
 
 # 개발 환경 설정
