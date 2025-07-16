@@ -56,6 +56,25 @@ public class S3UploadService {
         return amazonS3.getUrl(bucket, fileName).toString();
     }
 
+    public void deleteFiles(List<String> imageUrls) {
+        DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucket);
+        List<KeyVersion> keys = imageUrls.stream()
+                .map(this::extractFilenameFromUrl)
+                .map(KeyVersion::new)
+                .toList();
+        deleteObjectsRequest.setKeys(keys);
+
+        amazonS3.deleteObjects(deleteObjectsRequest);
+    }
+
+    private String extractFilenameFromUrl(String url) {
+        int index = url.indexOf(S3_URL_DOMAIN);
+        if (index == -1) {
+            throw new IllegalArgumentException("올바르지 않은 S3 URL: " + url);
+        }
+        return url.substring(index + S3_DOMAIN_LENGTH);
+    }
+
     private void validateFile(MultipartFile file) {
         // 파일 확장자 검증
         String extension = FilenameUtils.getExtension(file.getOriginalFilename()).toLowerCase();
