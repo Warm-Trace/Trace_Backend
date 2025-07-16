@@ -5,6 +5,7 @@ import com.example.trace.global.exception.*;
 import com.example.trace.global.response.ErrorResponse;
 import com.example.trace.global.response.GptErrorResponse;
 import com.example.trace.global.response.TokenErrorResponse;
+import com.example.trace.report.domain.Report;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -47,6 +48,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         PostErrorCode postErrorCode = e.getPostErrorCode();
         return handleExceptionInternal(postErrorCode);
     }
+    @ExceptionHandler(ReportException.class)
+    public ResponseEntity<Object> handleAuthException(ReportException e) {
+        ReportErrorCode reportErrorCode = e.getReportErrorCode();
+        return handleExceptionInternal(reportErrorCode);
+    }
+
+
 
     @ExceptionHandler(GptException.class)
     public ResponseEntity<Object> handleGptException(GptException e) {
@@ -88,6 +96,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     private ResponseEntity<Object> handleExceptionInternal(GptErrorCode gptErrorCode, String failureReason) {
         return ResponseEntity.status(gptErrorCode.getHttpStatus())
                 .body(makeGptErrorResponse(gptErrorCode,failureReason));
+    }
+
+    private ResponseEntity<Object> handleExceptionInternal(ReportErrorCode reportErrorCode) {
+        return ResponseEntity.status(reportErrorCode.getHttpStatus())
+                .body(makeErrorResponse(reportErrorCode));
     }
 
     private TokenErrorResponse makeTokenErrorResponse(TokenErrorCode tokenErrorCode) {

@@ -2,11 +2,10 @@ package com.example.trace.user;
 
 import com.example.trace.gpt.dto.VerificationDto;
 import jakarta.persistence.*;
-import lombok.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "users")
@@ -40,14 +39,11 @@ public class User {
     //spring security용으로 일단 두기.
     private String password;
     private String username;
-    private String role;
 
-    public List<String> getRoleList() {
-        if(this.role != null && !this.role.isEmpty()) {
-            return Arrays.asList(this.role.split(","));
-        }
-        return new ArrayList<>();
-    }
+    @Enumerated(EnumType.STRING) // Enum 이름을 DB에 문자열로 저장
+    @Column(nullable = false)
+    private Role role;
+
 
     public void updateNickname(String newNickname) {
         this.nickname = newNickname;
@@ -57,9 +53,9 @@ public class User {
         this.profileImageUrl = newProfileImageUrl;
     }
 
-    public void updateVerification(VerificationDto verificationDto){
-        if(verificationDto.isTextResult() || verificationDto.isImageResult()) verificationCount++;
-        if(verificationDto.isImageResult()) this.verificationScore += 10;
-        if(verificationDto.isTextResult()) this.verificationScore += 5;
+    public void updateVerification(VerificationDto verificationDto) {
+        if (verificationDto.isTextResult() || verificationDto.isImageResult()) verificationCount++;
+        if (verificationDto.isImageResult()) this.verificationScore += 10;
+        if (verificationDto.isTextResult()) this.verificationScore += 5;
     }
 }

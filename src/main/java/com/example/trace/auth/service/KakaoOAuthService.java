@@ -12,6 +12,7 @@ import com.example.trace.mission.mission.DailyMission;
 import com.example.trace.mission.mission.Mission;
 import com.example.trace.mission.repository.DailyMissionRepository;
 import com.example.trace.mission.repository.MissionRepository;
+import com.example.trace.user.Role;
 import com.example.trace.user.User;
 import com.example.trace.auth.dto.*;
 
@@ -130,7 +131,7 @@ public class KakaoOAuthService {
                     .email(request.getEmail() != null ? request.getEmail() : null)
                     .nickname(request.getNickname() != null ? request.getNickname() : null)
                     .profileImageUrl(request.getProfileImageUrl() != null ? request.getProfileImageUrl() : null) // 기본 사진은 나중에 구현
-                    .role("ROLE_USER")
+                    .role(Role.USER)
                     .build();
 
             userRepository.save(newUser);

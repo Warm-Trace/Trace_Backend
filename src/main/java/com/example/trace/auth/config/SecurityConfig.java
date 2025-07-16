@@ -54,7 +54,9 @@ public class SecurityConfig {
                         "/health",
                         "/"
                 ).permitAll()
-                .anyRequest().authenticated()
+                    .requestMatchers("/admin/**").hasRole("ADMIN")
+                    // 나머지 경로는 인증만 되면 접근 가능
+                    .anyRequest().authenticated()
             )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
         ;
