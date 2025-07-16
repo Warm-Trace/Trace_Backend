@@ -31,7 +31,7 @@ public class ReportController {
     }
 
 
-    @PostMapping("/block/{blockedId}")
+    @PostMapping("/block/{blockedProviderId}")
     @Operation(summary = "사용자 차단", description = "사용자를 차단합니다.")
     public ResponseEntity<Void> blockUser(@AuthenticationPrincipal PrincipalDetails principalDetails, @PathVariable String blockedProviderId) {
         String blockerProviderId = principalDetails.getUser().getProviderId();
@@ -39,7 +39,7 @@ public class ReportController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/unblock/{blockedId}")
+    @PostMapping("/unblock/{blockedProviderId}")
     @Operation(summary = "사용자 차단 해제", description = "차단된 사용자의 차단을 해제합니다.")
     public ResponseEntity<Void> unblockUser(@AuthenticationPrincipal PrincipalDetails principalDetails, @PathVariable String blockedProviderId) {
         String blockerProviderId = principalDetails.getUser().getProviderId();
