@@ -103,6 +103,10 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
 ---
 
 # 개발 환경 설정
