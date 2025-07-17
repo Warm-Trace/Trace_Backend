@@ -1,17 +1,17 @@
 package com.example.trace.post.controller;
 
+import com.example.trace.auth.dto.PrincipalDetails;
 import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.gpt.service.PostVerificationService;
 import com.example.trace.post.domain.PostType;
 import com.example.trace.post.dto.cursor.CursorResponse;
 import com.example.trace.post.dto.cursor.PostCursorRequest;
-import com.example.trace.post.dto.post.PostFeedDto;
-import com.example.trace.user.User;
-import com.example.trace.auth.dto.PrincipalDetails;
 import com.example.trace.post.dto.post.PostCreateDto;
 import com.example.trace.post.dto.post.PostDto;
+import com.example.trace.post.dto.post.PostFeedDto;
 import com.example.trace.post.dto.post.PostUpdateDto;
 import com.example.trace.post.service.PostService;
+import com.example.trace.user.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Encoding;
@@ -20,15 +20,22 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 
 @RestController
@@ -67,11 +74,11 @@ public class PostController {
             postCreateDto.setImageFiles(imageFiles.subList(0, maxImages));
         }
 
-        PostDto createdPost = postService.createPost(postCreateDto, ProviderId,null);
+        PostDto createdPost = postService.createPost(postCreateDto, ProviderId, null);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdPost);
     }
 
-    @PostMapping(value ="/verify",consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(value = "/verify", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @Operation(summary = "게시글 작성 시 인증 요구", description = "게시글의 내용이 선행과 관련있는지 인증합니다.")
     @ApiResponses({
             @ApiResponse(
@@ -98,10 +105,9 @@ public class PostController {
         }
         postCreateDto.setPostType(PostType.GOOD_DEED);
         VerificationDto verificationDto = postVerificationService.verifyPost(postCreateDto, providerId);
-        PostDto postDto = postService.createPost(postCreateDto,providerId,verificationDto);
+        PostDto postDto = postService.createPost(postCreateDto, providerId, verificationDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(postDto);
     }
-
 
     @GetMapping("/{id}")
     @Operation(summary = "게시글 조회", description = "게시글을 조회합니다.")
@@ -117,7 +123,7 @@ public class PostController {
             @PathVariable Long id,
             @AuthenticationPrincipal PrincipalDetails principalDetails) {
         User user = principalDetails.getUser();
-        PostDto postDto = postService.getPostById(id,user);
+        PostDto postDto = postService.getPostById(id, user);
 
         return ResponseEntity.ok(postDto);
     }
@@ -134,20 +140,18 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
-
     @PutMapping("/{id}")
     @Operation(summary = "게시글 수정", description = "게시글을 수정합니다.")
     public ResponseEntity<PostDto> updatePost(
             @PathVariable Long id,
-            @RequestBody PostUpdateDto postUpdateDto,
+            @RequestPart("request") @Valid PostUpdateDto postUpdateDto,
+            @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles,
             @AuthenticationPrincipal PrincipalDetails principalDetails) {
         String providerId = principalDetails.getUser().getProviderId();
-        PostDto updatedPost = postService.updatePost(id, postUpdateDto, providerId);
+        PostDto updatedPost = postService.updatePost(id, postUpdateDto, imageFiles, providerId);
+
         return ResponseEntity.ok(updatedPost);
     }
-
-
-
 
     @DeleteMapping("/{id}")
     @Operation(summary = "게시글 삭제", description = "게시글을 삭제합니다.")
@@ -175,5 +179,4 @@ public class PostController {
 
         return ResponseEntity.ok(response);
     }
-
 } 

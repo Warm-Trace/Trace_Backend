@@ -1,9 +1,28 @@
 package com.example.trace.post.domain;
 
-import com.example.trace.user.User;
 import com.example.trace.gpt.domain.Verification;
-
-import jakarta.persistence.*;
+import com.example.trace.user.User;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,12 +31,6 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
-
-
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "posts")
@@ -64,7 +77,7 @@ public class Post {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @OneToOne(mappedBy = "post",cascade = CascadeType.ALL,orphanRemoval = true)
+    @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private Verification verification;
 
     @Column(name = "mission_content")
@@ -79,7 +92,7 @@ public class Post {
         image.setPost(this);
     }
 
-    public void addComment(Comment comment){
+    public void addComment(Comment comment) {
         this.commentList.add(comment);
     }
 
@@ -87,10 +100,21 @@ public class Post {
         this.viewCount++;
     }
 
-    public void editPost(String title, String content) {
+    public void editPost(String title, String content, List<PostImage> images) {
         this.title = title;
         this.content = content;
         this.contentModified = true;
+
+        if (images != null && !images.isEmpty()) {
+            images.forEach(this::addImage); // 추가할 이미지를 기존 이미지 리스트에 추가하면서 연관관계 매핑
+            for (int i = 0; i < this.images.size(); i++) {
+                this.images.get(i).setOrder(i); // 모든 order 재정렬
+            }
+        }
+    }
+
+    public boolean isOwner(String providerId) {
+        return this.user.getProviderId().equals(providerId);
     }
 
     @PrePersist
