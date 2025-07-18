@@ -1,7 +1,14 @@
 package com.example.trace.user;
 
 import com.example.trace.gpt.dto.VerificationDto;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -38,12 +45,12 @@ public class User {
 
     //spring security용으로 일단 두기.
     private String password;
+
     private String username;
 
     @Enumerated(EnumType.STRING) // Enum 이름을 DB에 문자열로 저장
     @Column(nullable = false)
     private Role role;
-
 
     public void updateNickname(String newNickname) {
         this.nickname = newNickname;
@@ -54,8 +61,14 @@ public class User {
     }
 
     public void updateVerification(VerificationDto verificationDto) {
-        if (verificationDto.isTextResult() || verificationDto.isImageResult()) verificationCount++;
-        if (verificationDto.isImageResult()) this.verificationScore += 10;
-        if (verificationDto.isTextResult()) this.verificationScore += 5;
+        if (verificationDto.isTextResult() || verificationDto.isImageResult()) {
+            verificationCount++;
+        }
+        if (verificationDto.isImageResult()) {
+            this.verificationScore += 10;
+        }
+        if (verificationDto.isTextResult()) {
+            this.verificationScore += 5;
+        }
     }
 }
