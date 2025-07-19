@@ -4,8 +4,10 @@ import com.example.trace.global.fcm.domain.NotificationEvent;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,11 +22,11 @@ public class NotificationResponse {
 
     public static NotificationResponse fromEntity(NotificationEvent event) {
         return switch (event.getType()) {
-            case NOTIFICATION -> NotificationResponse.builder()
+            case DATA -> NotificationResponse.builder()
                     .data(event.getData())
                     .build();
 
-            case DATA -> NotificationResponse.builder()
+            case NOTIFICATION -> NotificationResponse.builder()
                     .title(event.getTitle())
                     .body(event.getBody())
                     .build();

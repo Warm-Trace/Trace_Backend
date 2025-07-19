@@ -107,4 +107,6 @@ public class NotificationEventService {
         event.mapToUser(user);
         notificationEventRepository.save(event);
     }
+
+    //TODO(gyunho): 30일 지나면 삭제하는 기능 추가
 }
