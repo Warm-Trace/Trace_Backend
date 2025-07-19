@@ -12,13 +12,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 
 @Entity
+@Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class NotificationEvent {
+public class NotificationEvent implements Comparable<NotificationEvent> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,7 +39,7 @@ public class NotificationEvent {
     @Column(columnDefinition = "TEXT")
     private String data;
 
-    private String timestamp;
+    private Long createdAt;
 
     @Builder.Default
     private Boolean isRead = false;
@@ -61,6 +64,11 @@ public class NotificationEvent {
         this.user = user;
         user.addNotification(this);
         return true;
+    }
+
+    @Override
+    public int compareTo(@NotNull NotificationEvent o) {
+        return this.createdAt.compareTo(o.createdAt);
     }
 
     //TODO: sourceType에 따라 refId 할당

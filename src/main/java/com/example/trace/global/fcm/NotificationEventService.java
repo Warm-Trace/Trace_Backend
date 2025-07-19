@@ -99,7 +99,7 @@ public class NotificationEventService {
 
         NotificationEvent event = NotificationEvent.builder()
                 .data(dataJson)
-                .timestamp(timestamp)
+                .createdAt(Long.valueOf(timestamp))
                 .sourceType(SourceType.fromString(sourceType))
                 .type(NotificationEventType.DATA)
                 .build();
