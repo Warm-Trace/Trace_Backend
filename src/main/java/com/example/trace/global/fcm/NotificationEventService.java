@@ -42,14 +42,13 @@ public class NotificationEventService {
         }
     }
 
-    // TODO: 여기에 User를 받아도 되는지 확인하기
-    public void sendCommentNotification(String providerId, Long postId, PostType postType, String commentContent) {
+    public void sendCommentNotification(User user, Long postId, PostType postType, String commentContent) {
         Map<String, String> additionalData = new HashMap<>();
         additionalData.put("type", "comment");
         additionalData.put("postId", String.valueOf(postId));
 
         Map<String, String> sentData = fcmTokenNotificationService.sendDataOnlyMessage(
-                providerId,
+                user.getProviderId(),
                 postType.getType() + "게시판",
                 "새로운 댓글이 달렸어요 : " + commentContent,
                 additionalData
@@ -64,7 +63,7 @@ public class NotificationEventService {
     }
 
     public void sendEmotionNotification(
-            String providerId,
+            User user,
             Long postId,
             PostType postType,
             EmotionType emotionType,
@@ -75,7 +74,7 @@ public class NotificationEventService {
         additionalData.put("emotion", emotionType.name());
 
         Map<String, String> sentData = fcmTokenNotificationService.sendDataOnlyMessage(
-                providerId,
+                user.getProviderId(),
                 postType.getType() + " 게시판",
                 nickName + "님이 당신의 흔적에 " + emotionType.getDescription() + "를 남겼어요",
                 additionalData
