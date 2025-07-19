@@ -4,19 +4,22 @@ import static com.example.trace.global.errorcode.UserErrorCode.USER_NOT_FOUND;
 
 import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.global.exception.UserException;
+import com.example.trace.global.fcm.domain.NotificationEvent;
 import com.example.trace.user.User;
-import com.example.trace.user.dto.NotificationResponse;
 import java.util.Comparator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
 
     private final UserRepository userRepository;
+    private final NotificationEventRepository notificationEventRepository;
 
+    @Transactional(readOnly = true)
     public List<NotificationResponse> getAllNotifications(String providerId) {
         User user = userRepository.findByProviderId(providerId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
@@ -26,5 +29,12 @@ public class NotificationService {
                 .sorted(Comparator.reverseOrder())
                 .map(NotificationResponse::fromEntity)
                 .toList();
+    }
+
+    @Transactional
+    public NotificationEvent read(Long id) {
+        NotificationEvent notificationEvent = notificationEventRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 알림입니다."));
+        return notificationEvent.read();
     }
 }

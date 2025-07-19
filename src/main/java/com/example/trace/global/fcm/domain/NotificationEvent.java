@@ -72,4 +72,8 @@ public class NotificationEvent implements Comparable<NotificationEvent> {
     }
 
     //TODO: sourceType에 따라 refId 할당
+    public NotificationEvent read() {
+        isRead = true;
+        return this;
+    }
 }
