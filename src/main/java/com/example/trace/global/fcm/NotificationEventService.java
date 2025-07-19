@@ -100,11 +100,11 @@ public class NotificationEventService {
         NotificationEvent event = NotificationEvent.builder()
                 .data(dataJson)
                 .timestamp(timestamp)
-                .user(user)
                 .sourceType(SourceType.fromString(sourceType))
                 .type(NotificationEventType.DATA)
                 .build();
 
+        event.mapToUser(user);
         notificationEventRepository.save(event);
     }
 }

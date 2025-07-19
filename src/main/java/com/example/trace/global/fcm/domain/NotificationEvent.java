@@ -54,5 +54,14 @@ public class NotificationEvent {
     @JoinColumn(name = "user_id")
     private User user;
 
+    public boolean mapToUser(User user) {
+        if (this.user != null && this.user.equals(user)) {
+            return false; // 이미 같은 user에 설정되어 있음
+        }
+        this.user = user;
+        user.addNotification(this);
+        return true;
+    }
+
     //TODO: sourceType에 따라 refId 할당
 }
