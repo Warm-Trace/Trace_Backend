@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
 import com.example.trace.auth.repository.UserRepository;
+import com.example.trace.global.fcm.NotificationService;
 import com.example.trace.global.fcm.domain.NotificationEvent;
 import com.example.trace.global.fcm.domain.NotificationEventType;
 import com.example.trace.global.fcm.domain.SourceType;
@@ -26,7 +27,7 @@ class UserServiceTest {
     private UserRepository userRepository;
 
     @InjectMocks
-    private UserService userService;
+    private NotificationService notificationService;
 
     @Test
     void getAllNotifications() throws Exception {
@@ -51,7 +52,7 @@ class UserServiceTest {
 
         //when
         when(userRepository.findByProviderId(providerId)).thenReturn(java.util.Optional.of(user));
-        List<NotificationResponse> allNotifications = userService.getAllNotifications(providerId);
+        List<NotificationResponse> allNotifications = notificationService.getAllNotifications(providerId);
 
         //then
         assertEquals(1, allNotifications.size());

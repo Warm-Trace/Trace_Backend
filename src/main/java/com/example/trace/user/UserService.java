@@ -10,10 +10,8 @@ import com.example.trace.global.errorcode.TokenErrorCode;
 import com.example.trace.global.errorcode.UserErrorCode;
 import com.example.trace.global.exception.TokenException;
 import com.example.trace.global.exception.UserException;
-import com.example.trace.user.dto.NotificationResponse;
 import com.example.trace.user.dto.UpdateNickNameRequest;
 import com.example.trace.user.dto.UserDto;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -88,16 +86,5 @@ public class UserService {
         redisUtil.save(accessToken, "delete", expiration, TimeUnit.MILLISECONDS);
         String redisKey = "RT:" + providerId;
         redisUtil.delete(redisKey);
-    }
-
-    public List<NotificationResponse> getAllNotifications(String providerId) {
-        User user = userRepository.findByProviderId(providerId)
-                .orElseThrow(() -> new UserException(USER_NOT_FOUND));
-
-        // 내림차순(최신순)으로 반환
-        return user.getNotificationEvents().stream()
-                .sorted(Comparator.reverseOrder())
-                .map(NotificationResponse::fromEntity)
-                .toList();
     }
 }

@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Schema(description = "알림 메시지 정보")
 public class NotificationResponse {
+    //TODO: swagger 정보 추가?
 
     private String title;
 
