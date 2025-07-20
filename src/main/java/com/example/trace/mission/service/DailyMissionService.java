@@ -81,7 +81,7 @@ public class DailyMissionService {
 
         dailyMission = dailyMissionRepository.save(dailyMission);
 
-        notificationEventService.sendDailyMissionAssignedNotification(user);
+        notificationEventService.sendDailyMissionAssignedNotification(user, randomMission);
         return DailyMissionResponse.fromEntity(dailyMission);
     }
 

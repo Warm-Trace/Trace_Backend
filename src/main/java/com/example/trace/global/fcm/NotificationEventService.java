@@ -4,6 +4,7 @@ import com.example.trace.emotion.EmotionType;
 import com.example.trace.global.fcm.domain.NotificationEvent;
 import com.example.trace.global.fcm.domain.NotificationEventType;
 import com.example.trace.global.fcm.domain.SourceType;
+import com.example.trace.mission.mission.Mission;
 import com.example.trace.post.domain.PostType;
 import com.example.trace.user.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,7 +24,7 @@ public class NotificationEventService {
     private final FcmTokenNotificationService fcmTokenNotificationService;
     private final NotificationEventRepository notificationEventRepository;
 
-    public void sendDailyMissionAssignedNotification(User user) {
+    public Map<String, String> sendDailyMissionAssignedNotification(User user, Mission mission) {
         String providerId = user.getProviderId();
         Map<String, String> additionalData = new HashMap<>();
         additionalData.put("type", "mission");
@@ -31,7 +32,7 @@ public class NotificationEventService {
         Map<String, String> sentData = fcmTokenNotificationService.sendDataOnlyMessage(
                 providerId,
                 "오늘의 선행 미션 도착!",
-                "작은 선행으로 따뜻한 흔적을 남겨보세요!",
+                mission.getDescription(),
                 additionalData
         );
 
@@ -41,6 +42,7 @@ public class NotificationEventService {
             log.error("전송한 FCM Data Message를 Json으로 직렬화하는데 실패했습니다. - data: {}", sentData);
             throw new RuntimeException(e);
         }
+        return sentData;
     }
 
     public void sendCommentNotification(User user, Long postId, PostType postType, String commentContent) {
