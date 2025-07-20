@@ -35,6 +35,8 @@ public class NotificationService {
     public NotificationEvent read(Long id) {
         NotificationEvent notificationEvent = notificationEventRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 알림입니다."));
+
+        //TODO: ref id로 다른 알림 가져온 후 read
         return notificationEvent.read();
     }
 }
