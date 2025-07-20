@@ -32,11 +32,19 @@ public class NotificationService {
     }
 
     @Transactional
-    public NotificationEvent read(Long id) {
+    public NotificationEvent read(Long id, String userProviderId) {
         NotificationEvent notificationEvent = notificationEventRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 알림입니다."));
+        User user = userRepository.findByProviderId(userProviderId)
+                .orElseThrow(() -> new UserException(USER_NOT_FOUND));
 
-        //TODO: ref id로 다른 알림 가져온 후 read
+        Long refId = notificationEvent.getRefId();
+        List<NotificationEvent> referred = notificationEventRepository.findAllByRefIdAndUser(refId, user);
+
+        for (NotificationEvent n : referred) {
+            n.read();
+        }
+
         return notificationEvent.read();
     }
 }

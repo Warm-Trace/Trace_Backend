@@ -13,6 +13,7 @@ import com.example.trace.global.fcm.domain.NotificationEvent;
 import com.example.trace.global.fcm.domain.NotificationEventType;
 import com.example.trace.global.fcm.domain.SourceType;
 import com.example.trace.user.User;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.List;
@@ -46,14 +47,8 @@ class NotificationServiceTest {
                 .build();
         userRepository.save(user);
 
-        Map<String, String> data = getMissionData("");
-        ObjectMapper objectMapper = new ObjectMapper();
-        NotificationEvent event = NotificationEvent.builder()
-                .data(objectMapper.writeValueAsString(data))
-                .createdAt(Long.valueOf(data.get("timestamp")))
-                .sourceType(SourceType.fromString(data.get("type")))
-                .type(NotificationEventType.DATA)
-                .build();
+        Map<String, String> data = getDataOf("mission", "");
+        NotificationEvent event = getNotificationFromData(1L, 1L, data);
 
         event.mapToUser(user);
 
@@ -69,30 +64,63 @@ class NotificationServiceTest {
     @Test
     void read() throws Exception {
         //given
-        Map<String, String> data = getMissionData("");
-        ObjectMapper objectMapper = new ObjectMapper();
-        NotificationEvent event = NotificationEvent.builder()
-                .id(1L)
-                .data(objectMapper.writeValueAsString(data))
-                .createdAt(Long.valueOf(data.get("timestamp")))
-                .sourceType(SourceType.fromString(data.get("type")))
-                .type(NotificationEventType.DATA)
-                .build();
+        User user = new User();
+        Map<String, String> data = getDataOf("mission", "");
+        NotificationEvent event = getNotificationFromData(1L, 1L, data);
 
         //when
+        when(userRepository.findByProviderId("none")).thenReturn(Optional.of(user));
         when(notificationEventRepository.findById(1L)).thenReturn(Optional.of(event));
-        NotificationEvent updated = notificationService.read(1L);
+
+        NotificationEvent updated = notificationService.read(1L, "none");
 
         //then
         assertTrue(updated.getIsRead());
     }
 
-    private Map<String, String> getMissionData(String num) {
+    @Test
+    void readReferredNotifications() throws Exception {
+        //given
+        User user = User.builder().providerId("123").build();
+        Map<String, String> commentData1 = getDataOf("comment", "1");
+        Map<String, String> commentData2 = getDataOf("comment", "2");
+        Map<String, String> emotionData = getDataOf("emotion", "2");
+        NotificationEvent notification1 = getNotificationFromData(1L, 10L, commentData1);
+        NotificationEvent notification2 = getNotificationFromData(2L, 10L, commentData2);
+        NotificationEvent notification3 = getNotificationFromData(3L, 10L, emotionData);
+
+        //when
+        when(userRepository.findByProviderId("123")).thenReturn(Optional.of(user));
+        when(notificationEventRepository.findById(1L)).thenReturn(Optional.of(notification1));
+        when(notificationEventRepository.findAllByRefIdAndUser(10L, user)).thenReturn(
+                List.of(notification1, notification2, notification3));
+
+        notificationService.read(1L, "123");
+
+        //then
+        assertTrue(notification2.getIsRead());
+        assertTrue(notification3.getIsRead());
+    }
+
+    private Map<String, String> getDataOf(String type, String num) {
         Map<String, String> data = new HashMap<>();
-        data.put("type", "mission");
+        data.put("type", type);
         data.put("title", "title" + num);
         data.put("body", "body" + num);
         data.put("timestamp", String.valueOf(System.currentTimeMillis()));
         return data;
+    }
+
+    private NotificationEvent getNotificationFromData(Long id, Long refId, Map<String, String> data)
+            throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return NotificationEvent.builder()
+                .id(id)
+                .refId(refId)
+                .data(objectMapper.writeValueAsString(data))
+                .createdAt(Long.valueOf(data.get("timestamp")))
+                .sourceType(SourceType.fromString(data.get("type")))
+                .type(NotificationEventType.DATA)
+                .build();
     }
 }

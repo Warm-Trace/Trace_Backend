@@ -33,8 +33,8 @@ public class NotificationController {
 
     @PutMapping("/open/{id}")
     @Operation(summary = "알림 읽기", description = "알림을 읽을 때 호출됩니다.")
-    public ResponseEntity<?> read(@PathVariable("id") Long id) {
-        notificationService.read(id);
+    public ResponseEntity<?> read(@PathVariable("id") Long id, @AuthenticationPrincipal PrincipalDetails current) {
+        notificationService.read(id, current.getUser().getProviderId());
         return ResponseEntity.ok().build();
     }
 }
