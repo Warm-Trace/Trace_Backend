@@ -151,7 +151,7 @@ public class KakaoOAuthService {
 
             dailyMissionRepository.save(signUpDailyMission);
 
-            notificationEventService.sendDailyMissionAssignedNotification(newUser);
+            notificationEventService.sendDailyMissionAssignedNotification(newUser, randomMission);
 
             // 4. Generate JWT tokens for your app
             String accessToken = generateAccessToken(newUser);
