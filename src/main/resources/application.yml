@@ -60,6 +60,7 @@ springdoc:
     - /fcm/**
     - /reports/**
     - /admin/reports/**
+    - /notifications/**
 
 # OAuth2 클라이언트 설정 - API 키 관리, 외부에 노출되면 안 됨
 oauth2:

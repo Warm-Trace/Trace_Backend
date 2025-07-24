@@ -13,6 +13,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @Service
@@ -96,8 +97,15 @@ public class NotificationEventService {
         String dataJson = objectMapper.writeValueAsString(data);
         String timestamp = data.get("timestamp");
         String sourceType = data.get("type");
+        String postId = data.get("postId");
+        long referenceId = 0L;
+
+        if (StringUtils.hasText(postId)) {
+            referenceId = Long.parseLong(postId);
+        }
 
         NotificationEvent event = NotificationEvent.builder()
+                .refId(referenceId)
                 .data(dataJson)
                 .createdAt(Long.valueOf(timestamp))
                 .sourceType(SourceType.fromString(sourceType))

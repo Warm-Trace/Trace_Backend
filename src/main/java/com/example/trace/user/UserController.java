@@ -43,7 +43,6 @@ public class UserController {
     private final S3UploadService s3UploadService;
     private final PostService postService;
 
-
     @Operation(summary = "유저 정보 조회", description = "유저 정보를 가져옵니다.")
     @ApiResponse(
             responseCode = "200",
@@ -128,12 +127,5 @@ public class UserController {
         String providerId = principalDetails.getUser().getProviderId();
         CursorResponse<PostFeedDto> response = postService.getMyPagePostsWithCursor(request, providerId);
         return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/notifications")
-    @Operation(summary = "모든 알림 가져오기", description = "알림 탭 새로고침 시 호출됩니다. 사용자의 알림을 최신순으로 정렬하여 전송합니다.")
-    public ResponseEntity<?> getAllNotifications(@AuthenticationPrincipal PrincipalDetails current) {
-        User currentUser = current.getUser();
-        return ResponseEntity.ok(userService.getAllNotifications(currentUser.getProviderId()));
     }
 }

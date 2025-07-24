@@ -1,0 +1,126 @@
+package com.example.trace.notification;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
+
+import com.example.trace.auth.repository.UserRepository;
+import com.example.trace.global.fcm.NotificationEventRepository;
+import com.example.trace.global.fcm.NotificationResponse;
+import com.example.trace.global.fcm.NotificationService;
+import com.example.trace.global.fcm.domain.NotificationEvent;
+import com.example.trace.global.fcm.domain.NotificationEventType;
+import com.example.trace.global.fcm.domain.SourceType;
+import com.example.trace.user.User;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class NotificationServiceTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private NotificationEventRepository notificationEventRepository;
+
+    @InjectMocks
+    private NotificationService notificationService;
+
+    @Test
+    void getAllNotifications() throws Exception {
+        //given
+        String providerId = "12345";
+        User user = User.builder()
+                .id(1L)
+                .providerId(providerId)
+                .build();
+        userRepository.save(user);
+
+        Map<String, String> data = getDataOf("mission", "");
+        NotificationEvent event = getNotificationFromData(1L, 1L, data);
+
+        event.mapToUser(user);
+
+        //when
+        when(userRepository.findByProviderId(providerId)).thenReturn(java.util.Optional.of(user));
+        List<NotificationResponse> allNotifications = notificationService.getAllNotifications(providerId);
+
+        //then
+        assertEquals(1, allNotifications.size());
+        assertNotNull(allNotifications.get(0).getData());
+    }
+
+    @Test
+    void read() throws Exception {
+        //given
+        User user = new User();
+        Map<String, String> data = getDataOf("mission", "");
+        NotificationEvent event = getNotificationFromData(1L, 1L, data);
+
+        //when
+        when(userRepository.findByProviderId("none")).thenReturn(Optional.of(user));
+        when(notificationEventRepository.findById(1L)).thenReturn(Optional.of(event));
+
+        NotificationEvent updated = notificationService.read(1L, "none");
+
+        //then
+        assertTrue(updated.getIsRead());
+    }
+
+    @Test
+    void readReferredNotifications() throws Exception {
+        //given
+        User user = User.builder().providerId("123").build();
+        Map<String, String> commentData1 = getDataOf("comment", "1");
+        Map<String, String> commentData2 = getDataOf("comment", "2");
+        Map<String, String> emotionData = getDataOf("emotion", "2");
+        NotificationEvent notification1 = getNotificationFromData(1L, 10L, commentData1);
+        NotificationEvent notification2 = getNotificationFromData(2L, 10L, commentData2);
+        NotificationEvent notification3 = getNotificationFromData(3L, 10L, emotionData);
+
+        //when
+        when(userRepository.findByProviderId("123")).thenReturn(Optional.of(user));
+        when(notificationEventRepository.findById(1L)).thenReturn(Optional.of(notification1));
+        when(notificationEventRepository.findAllByRefIdAndUser(10L, user)).thenReturn(
+                List.of(notification1, notification2, notification3));
+
+        notificationService.read(1L, "123");
+
+        //then
+        assertTrue(notification2.getIsRead());
+        assertTrue(notification3.getIsRead());
+    }
+
+    private Map<String, String> getDataOf(String type, String num) {
+        Map<String, String> data = new HashMap<>();
+        data.put("type", type);
+        data.put("title", "title" + num);
+        data.put("body", "body" + num);
+        data.put("timestamp", String.valueOf(System.currentTimeMillis()));
+        return data;
+    }
+
+    private NotificationEvent getNotificationFromData(Long id, Long refId, Map<String, String> data)
+            throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return NotificationEvent.builder()
+                .id(id)
+                .refId(refId)
+                .data(objectMapper.writeValueAsString(data))
+                .createdAt(Long.valueOf(data.get("timestamp")))
+                .sourceType(SourceType.fromString(data.get("type")))
+                .type(NotificationEventType.DATA)
+                .build();
+    }
+}
