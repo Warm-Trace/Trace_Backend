@@ -2,6 +2,7 @@ package com.example.trace.post.service;
 
 import com.example.trace.global.errorcode.PostErrorCode;
 import com.example.trace.global.exception.PostException;
+import com.example.trace.global.response.CursorResponse;
 import com.example.trace.notification.service.NotificationEventService;
 import com.example.trace.post.domain.Comment;
 import com.example.trace.post.domain.Post;
@@ -9,7 +10,6 @@ import com.example.trace.post.domain.PostType;
 import com.example.trace.post.dto.comment.CommentCreateDto;
 import com.example.trace.post.dto.comment.CommentDto;
 import com.example.trace.post.dto.cursor.CommentCursorRequest;
-import com.example.trace.post.dto.cursor.CursorResponse;
 import com.example.trace.post.repository.CommentRepository;
 import com.example.trace.post.repository.PostRepository;
 import com.example.trace.user.User;
