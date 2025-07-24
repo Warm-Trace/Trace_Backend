@@ -1,6 +1,7 @@
-package com.example.trace.global.fcm;
+package com.example.trace.notification.controller;
 
 import com.example.trace.auth.dto.PrincipalDetails;
+import com.example.trace.notification.service.NotificationService;
 import com.example.trace.user.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

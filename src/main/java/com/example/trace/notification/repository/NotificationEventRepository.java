@@ -1,6 +1,6 @@
-package com.example.trace.global.fcm;
+package com.example.trace.notification.repository;
 
-import com.example.trace.global.fcm.domain.NotificationEvent;
+import com.example.trace.notification.domain.NotificationEvent;
 import com.example.trace.user.User;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;

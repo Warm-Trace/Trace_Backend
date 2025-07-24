@@ -1,4 +1,4 @@
-package com.example.trace.global.fcm.domain;
+package com.example.trace.notification.domain;
 
 import com.example.trace.user.User;
 import jakarta.persistence.Column;

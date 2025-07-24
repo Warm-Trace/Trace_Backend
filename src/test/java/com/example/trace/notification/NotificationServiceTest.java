@@ -6,12 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.example.trace.auth.repository.UserRepository;
-import com.example.trace.global.fcm.NotificationEventRepository;
-import com.example.trace.global.fcm.NotificationResponse;
-import com.example.trace.global.fcm.NotificationService;
-import com.example.trace.global.fcm.domain.NotificationEvent;
-import com.example.trace.global.fcm.domain.NotificationEventType;
-import com.example.trace.global.fcm.domain.SourceType;
+import com.example.trace.notification.domain.NotificationEvent;
+import com.example.trace.notification.domain.NotificationEventType;
+import com.example.trace.notification.domain.SourceType;
+import com.example.trace.notification.dto.NotificationResponse;
+import com.example.trace.notification.repository.NotificationEventRepository;
+import com.example.trace.notification.service.NotificationService;
 import com.example.trace.user.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

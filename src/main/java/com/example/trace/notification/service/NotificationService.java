@@ -1,10 +1,12 @@
-package com.example.trace.global.fcm;
+package com.example.trace.notification.service;
 
 import static com.example.trace.global.errorcode.UserErrorCode.USER_NOT_FOUND;
 
 import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.global.exception.UserException;
-import com.example.trace.global.fcm.domain.NotificationEvent;
+import com.example.trace.notification.domain.NotificationEvent;
+import com.example.trace.notification.dto.NotificationResponse;
+import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.user.User;
 import java.util.Comparator;
 import java.util.List;

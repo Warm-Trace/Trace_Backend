@@ -2,7 +2,7 @@ package com.example.trace.post.service;
 
 import com.example.trace.global.errorcode.PostErrorCode;
 import com.example.trace.global.exception.PostException;
-import com.example.trace.global.fcm.NotificationEventService;
+import com.example.trace.notification.service.NotificationEventService;
 import com.example.trace.post.domain.Comment;
 import com.example.trace.post.domain.Post;
 import com.example.trace.post.domain.PostType;

@@ -2,7 +2,7 @@ package com.example.trace.emotion;
 
 import com.example.trace.emotion.dto.EmotionCountDto;
 import com.example.trace.emotion.dto.EmotionResponse;
-import com.example.trace.global.fcm.NotificationEventService;
+import com.example.trace.notification.service.NotificationEventService;
 import com.example.trace.post.domain.Post;
 import com.example.trace.post.domain.PostType;
 import com.example.trace.post.repository.PostRepository;
