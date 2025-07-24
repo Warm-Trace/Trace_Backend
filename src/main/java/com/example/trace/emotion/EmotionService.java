@@ -2,7 +2,7 @@ package com.example.trace.emotion;
 
 import com.example.trace.emotion.dto.EmotionCountDto;
 import com.example.trace.emotion.dto.EmotionResponse;
-import com.example.trace.global.fcm.NotifiacationEventService;
+import com.example.trace.global.fcm.NotificationEventService;
 import com.example.trace.post.domain.Post;
 import com.example.trace.post.domain.PostType;
 import com.example.trace.post.repository.PostRepository;
@@ -17,14 +17,14 @@ import org.springframework.stereotype.Service;
 public class EmotionService {
     private final EmotionRepository emotionRepository;
     private final PostRepository postRepository;
-    private final NotifiacationEventService notifiacationEventService;
+    private final NotificationEventService notificationEventService;
 
 
     @Transactional
-    public EmotionResponse toggleEmotion(Long postId,User user, EmotionType emotionType) {
-        Emotion existingEmotion = emotionRepository.findByPostIdAndUser(postId,user);
+    public EmotionResponse toggleEmotion(Long postId, User user, EmotionType emotionType) {
+        Emotion existingEmotion = emotionRepository.findByPostIdAndUser(postId, user);
 
-        if(existingEmotion == null){
+        if (existingEmotion == null) {
             Post post = postRepository.findById(postId)
                     .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다."));
             Emotion emotion = Emotion.builder()
@@ -34,33 +34,32 @@ public class EmotionService {
                     .build();
             emotionRepository.save(emotion);
 
-            if(!user.getProviderId().equals(post.getUser().getProviderId())){
-                String providerId = post.getUser().getProviderId();
+            if (!user.getProviderId().equals(post.getUser().getProviderId())) {
+                User postAuthor = post.getUser();
                 PostType postType = post.getPostType();
                 String nickName = user.getNickname();
-                notifiacationEventService.sendEmotionNotification(providerId,postId,postType,emotionType,nickName);
+                notificationEventService.sendEmotionNotification(postAuthor, postId, postType, emotionType, nickName);
             }
             return new EmotionResponse(true, emotionType.name());
 
-        }
-        else{
+        } else {
             Post post = postRepository.findById(postId)
                     .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다."));
             EmotionType currentType = existingEmotion.getEmotionType();
-            if(currentType != emotionType) {
+            if (currentType != emotionType) {
                 existingEmotion.updateEmotion(emotionType);
                 emotionRepository.save(existingEmotion);
 
-                if(!user.getProviderId().equals(post.getUser().getProviderId())){
-                    String providerId = post.getUser().getProviderId();
+                if (!user.getProviderId().equals(post.getUser().getProviderId())) {
+                    User postAuthor = post.getUser();
                     PostType postType = post.getPostType();
                     String nickName = user.getNickname();
-                    notifiacationEventService.sendEmotionNotification(providerId,postId,postType,emotionType,nickName);
+                    notificationEventService.sendEmotionNotification(postAuthor, postId, postType, emotionType,
+                            nickName);
                     return new EmotionResponse(true, emotionType.name());
                 }
                 return new EmotionResponse(true, emotionType.name());
-            }
-            else{
+            } else {
                 emotionRepository.delete(existingEmotion);
                 return new EmotionResponse(false, emotionType.name());
             }
@@ -83,13 +82,12 @@ public class EmotionService {
                 .build();
     }
 
-    public EmotionType getYourEmotion(Long postId, User user){
-        Emotion yourEmotion = emotionRepository.findByPostIdAndUser(postId,user);
+    public EmotionType getYourEmotion(Long postId, User user) {
+        Emotion yourEmotion = emotionRepository.findByPostIdAndUser(postId, user);
         EmotionType yourEmotionType;
-        if(yourEmotion == null){
+        if (yourEmotion == null) {
             yourEmotionType = null;
-        }
-        else {
+        } else {
             yourEmotionType = yourEmotion.getEmotionType();
         }
         return yourEmotionType;

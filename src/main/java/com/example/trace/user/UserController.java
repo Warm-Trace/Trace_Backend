@@ -8,6 +8,7 @@ import com.example.trace.post.dto.cursor.CursorResponse;
 import com.example.trace.post.dto.cursor.PostCursorRequest;
 import com.example.trace.post.dto.post.PostFeedDto;
 import com.example.trace.post.service.PostService;
+import com.example.trace.user.dto.UpdateNickNameRequest;
 import com.example.trace.user.dto.UserDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,16 +16,20 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-import com.example.trace.user.dto.UpdateNickNameRequest;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
 
 
 @RestController
@@ -57,7 +62,7 @@ public class UserController {
 
 
     @Operation(summary = "유저 프로필 이미지 수정", description = "프로필 이미지를 수정합니다.")
-    @PutMapping(value = "/profile/image",consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PutMapping(value = "/profile/image", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<UserDto> updateUserProfileImage(
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
             @AuthenticationPrincipal PrincipalDetails principalDetails) throws IOException {
@@ -82,8 +87,6 @@ public class UserController {
         User user = principalDetails.getUser();
         return ResponseEntity.ok(userService.updateUserNickName(user, request));
     }
-
-
 
 
     @Operation(summary = "로그아웃", description = "로그아웃 합니다.")
@@ -127,4 +130,10 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/notifications")
+    @Operation(summary = "모든 알림 가져오기", description = "알림 탭 새로고침 시 호출됩니다. 사용자의 알림을 최신순으로 정렬하여 전송합니다.")
+    public ResponseEntity<?> getAllNotifications(@AuthenticationPrincipal PrincipalDetails current) {
+        User currentUser = current.getUser();
+        return ResponseEntity.ok(userService.getAllNotifications(currentUser.getProviderId()));
+    }
 }

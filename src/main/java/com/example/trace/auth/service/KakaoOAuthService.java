@@ -2,30 +2,34 @@ package com.example.trace.auth.service;
 
 import com.example.trace.auth.Util.JwtUtil;
 import com.example.trace.auth.client.KakaoOAuthClient;
-import com.example.trace.global.errorcode.AuthErrorCode;
-import com.example.trace.global.errorcode.SignUpErrorCode;
-import com.example.trace.global.exception.AuthException;
-import com.example.trace.global.exception.SignUpException;
-import com.example.trace.global.fcm.FcmTokenService;
-import com.example.trace.global.fcm.NotifiacationEventService;
-import com.example.trace.mission.mission.DailyMission;
-import com.example.trace.mission.mission.Mission;
-import com.example.trace.mission.repository.DailyMissionRepository;
-import com.example.trace.mission.repository.MissionRepository;
-import com.example.trace.user.Role;
-import com.example.trace.user.User;
-import com.example.trace.auth.dto.*;
-
+import com.example.trace.auth.dto.PrincipalDetails;
+import com.example.trace.auth.dto.TokenResponse;
 import com.example.trace.auth.dto.request.KakaoLoginRequest;
 import com.example.trace.auth.dto.request.KakaoSignupRequest;
 import com.example.trace.auth.dto.response.SignupRequiredResponse;
 import com.example.trace.auth.models.OIDCDecodePayload;
 import com.example.trace.auth.models.OIDCPublicKey;
 import com.example.trace.auth.models.OIDCPublicKeyResponse;
-import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.auth.provider.KakaoOIDCProvider;
+import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.file.FileType;
 import com.example.trace.file.S3UploadService;
+import com.example.trace.global.errorcode.AuthErrorCode;
+import com.example.trace.global.errorcode.SignUpErrorCode;
+import com.example.trace.global.exception.AuthException;
+import com.example.trace.global.exception.SignUpException;
+import com.example.trace.global.fcm.FcmTokenService;
+import com.example.trace.global.fcm.NotificationEventService;
+import com.example.trace.mission.mission.DailyMission;
+import com.example.trace.mission.mission.Mission;
+import com.example.trace.mission.repository.DailyMissionRepository;
+import com.example.trace.mission.repository.MissionRepository;
+import com.example.trace.user.Role;
+import com.example.trace.user.User;
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,11 +38,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -53,7 +52,7 @@ public class KakaoOAuthService {
     private final JwtUtil jwtUtil;
     private final S3UploadService s3UploadService;
     private final FcmTokenService fcmTokenService;
-    private final NotifiacationEventService notifiacationEventService;
+    private final NotificationEventService notificationEventService;
 
     @Value("${oauth2.client.registration.kakao.client-id}")
     private String kakaoClientId; // 카카오 로그인 api의앱 키.
@@ -97,7 +96,9 @@ public class KakaoOAuthService {
             // 사용자 없으면 레디스에 임시 회원가입 토큰 저장
             String signupToken = UUID.randomUUID().toString();
             redisTemplate.opsForValue().set("signup:" + signupToken, ProviderId, 1, TimeUnit.HOURS);
-            return ResponseEntity.status(HttpStatus.ACCEPTED).body(new SignupRequiredResponse(signupToken, ProviderId, payload.getEmail(), payload.getNickname(), payload.getPicture(), false));
+            return ResponseEntity.status(HttpStatus.ACCEPTED)
+                    .body(new SignupRequiredResponse(signupToken, ProviderId, payload.getEmail(), payload.getNickname(),
+                            payload.getPicture(), false));
         }
 
     }
@@ -113,12 +114,12 @@ public class KakaoOAuthService {
             }
 
             // 회원 가입 요청시, 사진 업로드를 했다면, s3에 저장
-            if(request.getProfileImageFile() != null) {
-                try{
+            if (request.getProfileImageFile() != null) {
+                try {
                     // 파일 유효성 검사
-                    request.setProfileImageUrl(s3UploadService.saveFile(request.getProfileImageFile(), FileType.PROFILE,request.getProviderId() ));
-                }
-                catch (Exception e) {
+                    request.setProfileImageUrl(s3UploadService.saveFile(request.getProfileImageFile(), FileType.PROFILE,
+                            request.getProviderId()));
+                } catch (Exception e) {
                     log.error("Error uploading profile image", e);
                     throw new SignUpException(SignUpErrorCode.FILE_UPLOAD_ERROR);
                 }
@@ -130,7 +131,8 @@ public class KakaoOAuthService {
                     .provider("KAKAO")
                     .email(request.getEmail() != null ? request.getEmail() : null)
                     .nickname(request.getNickname() != null ? request.getNickname() : null)
-                    .profileImageUrl(request.getProfileImageUrl() != null ? request.getProfileImageUrl() : null) // 기본 사진은 나중에 구현
+                    .profileImageUrl(
+                            request.getProfileImageUrl() != null ? request.getProfileImageUrl() : null) // 기본 사진은 나중에 구현
                     .role(Role.USER)
                     .build();
 
@@ -149,7 +151,7 @@ public class KakaoOAuthService {
 
             dailyMissionRepository.save(signUpDailyMission);
 
-            notifiacationEventService.sendDailyMissionAssignedNotification(newUser);
+            notificationEventService.sendDailyMissionAssignedNotification(newUser);
 
             // 4. Generate JWT tokens for your app
             String accessToken = generateAccessToken(newUser);
@@ -164,7 +166,6 @@ public class KakaoOAuthService {
             throw new SignUpException(SignUpErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
-
 
 
     private String generateAccessToken(User user) {

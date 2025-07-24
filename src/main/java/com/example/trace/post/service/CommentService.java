@@ -2,7 +2,7 @@ package com.example.trace.post.service;
 
 import com.example.trace.global.errorcode.PostErrorCode;
 import com.example.trace.global.exception.PostException;
-import com.example.trace.global.fcm.NotifiacationEventService;
+import com.example.trace.global.fcm.NotificationEventService;
 import com.example.trace.post.domain.Comment;
 import com.example.trace.post.domain.Post;
 import com.example.trace.post.domain.PostType;
@@ -14,14 +14,13 @@ import com.example.trace.post.repository.CommentRepository;
 import com.example.trace.post.repository.PostRepository;
 import com.example.trace.user.User;
 import com.example.trace.user.UserService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,11 +28,9 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserService userService;
-    private final NotifiacationEventService notifiacationEventService;
+    private final NotificationEventService notificationEventService;
 
-
-
-    public CommentDto addComment(Long postId ,CommentCreateDto commentCreateDto, String providerId) {
+    public CommentDto addComment(Long postId, CommentCreateDto commentCreateDto, String providerId) {
 
         Post postToAddComment = postRepository.findById(postId)
                 .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND));
@@ -43,7 +40,6 @@ public class CommentService {
         if (commentCreateDto.getContent() == null || commentCreateDto.getContent().isEmpty()) {
             throw new PostException(PostErrorCode.CONTENT_EMPTY);
         }
-
 
         Comment comment = Comment.builder()
                 .post(postToAddComment)
@@ -59,13 +55,14 @@ public class CommentService {
         String commentAuthorUserProviderId = commentAuthorUser.getProviderId();
 
         // 게시글 작성자가 댓글을 단게 아니라면 게시글 작성자에게 알림
-        if(!postAuthorProviderId.equals(commentAuthorUserProviderId)){
+        if (!postAuthorProviderId.equals(commentAuthorUserProviderId)) {
+            User author = postToAddComment.getUser();
             PostType postType = postToAddComment.getPostType();
             String commentComment = comment.getContent();
-            notifiacationEventService.sendCommentNotification(postAuthorProviderId,postId,postType,commentComment);
+            notificationEventService.sendCommentNotification(author, postId, postType, commentComment);
         }
 
-        return CommentDto.fromEntity(comment,providerId);
+        return CommentDto.fromEntity(comment, providerId);
     }
 
     @Transactional
@@ -77,10 +74,11 @@ public class CommentService {
             throw new PostException(PostErrorCode.COMMENT_DELETE_FORBIDDEN);
         }
         comment.removeSelf();
-        return CommentDto.fromEntity(comment,providerId);
+        return CommentDto.fromEntity(comment, providerId);
     }
 
-    public CommentDto addChildrenComment(Long postId,Long commentId,CommentCreateDto commentCreateDto, String providerId){
+    public CommentDto addChildrenComment(Long postId, Long commentId, CommentCreateDto commentCreateDto,
+                                         String providerId) {
         User user = userService.getUser(providerId);
 
         Comment parentComment = commentRepository.findById(commentId)
@@ -107,21 +105,23 @@ public class CommentService {
 
         parentComment.addChild(childrenComment);
 
-        return CommentDto.fromEntity(childrenComment,providerId);
+        return CommentDto.fromEntity(childrenComment, providerId);
     }
 
-    public CursorResponse<CommentDto> getCommentsWithCursor(CommentCursorRequest request,Long postId, String providerId) {
+    public CursorResponse<CommentDto> getCommentsWithCursor(CommentCursorRequest request, Long postId,
+                                                            String providerId) {
         User user = userService.getUser(providerId);
 
         // 커서 기반 부모 댓글의 id 리스트 가져오기
         List<Long> parentCommentsIdList;
         if (request.getCursorDateTime() == null || request.getCursorId() == null) {
             // 첫 페이지 조회
-            parentCommentsIdList = commentRepository.findParentCommentsIdWithCursor(null, null, postId,request.getSize() + 1,providerId);
+            parentCommentsIdList = commentRepository.findParentCommentsIdWithCursor(null, null, postId,
+                    request.getSize() + 1, providerId);
         } else {
             // 다음 페이지 조회
             parentCommentsIdList = commentRepository.findParentCommentsIdWithCursor(
-                    request.getCursorDateTime(), request.getCursorId(),  postId,request.getSize() + 1,providerId);
+                    request.getCursorDateTime(), request.getCursorId(), postId, request.getSize() + 1, providerId);
         }
 
         // 다음 페이지 여부 확인
