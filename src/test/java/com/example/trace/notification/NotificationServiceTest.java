@@ -6,9 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.example.trace.auth.repository.UserRepository;
+import com.example.trace.global.response.CursorResponse;
 import com.example.trace.notification.domain.NotificationEvent;
 import com.example.trace.notification.domain.NotificationEventType;
 import com.example.trace.notification.domain.SourceType;
+import com.example.trace.notification.dto.NotificationCursorRequest;
 import com.example.trace.notification.dto.NotificationResponse;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.notification.service.NotificationService;
@@ -24,6 +26,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceTest {
@@ -38,14 +42,14 @@ class NotificationServiceTest {
     private NotificationService notificationService;
 
     @Test
-    void getAllNotifications() throws Exception {
+    void getNotifications() throws Exception {
         //given
         String providerId = "12345";
         User user = User.builder()
                 .id(1L)
                 .providerId(providerId)
                 .build();
-        userRepository.save(user);
+        NotificationCursorRequest firstRequest = NotificationCursorRequest.builder().build();
 
         Map<String, String> data = getDataOf("mission", "");
         NotificationEvent event = getNotificationFromData(1L, 1L, data);
@@ -53,12 +57,15 @@ class NotificationServiceTest {
         event.mapToUser(user);
 
         //when
-        when(userRepository.findByProviderId(providerId)).thenReturn(java.util.Optional.of(user));
-        List<NotificationResponse> allNotifications = notificationService.getAllNotifications(providerId);
+        when(notificationEventRepository.findFirstPage(user, PageRequest.of(0, firstRequest.getSize(),
+                Sort.by("createdAt").descending().and(Sort.by("id").descending()))))
+                .thenReturn(List.of(event));
+
+        CursorResponse<NotificationResponse> notifications = notificationService.getNotifications(firstRequest, user);
 
         //then
-        assertEquals(1, allNotifications.size());
-        assertNotNull(allNotifications.get(0).getData());
+        assertEquals(1, notifications.getContent().size());
+        assertNotNull(notifications.getContent().get(0).getData());
     }
 
     @Test
