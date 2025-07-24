@@ -4,13 +4,20 @@ import static com.example.trace.global.errorcode.UserErrorCode.USER_NOT_FOUND;
 
 import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.global.exception.UserException;
+import com.example.trace.global.response.CursorResponse;
+import com.example.trace.global.response.CursorResponse.CursorMeta;
 import com.example.trace.notification.domain.NotificationEvent;
+import com.example.trace.notification.dto.NotificationCursorRequest;
 import com.example.trace.notification.dto.NotificationResponse;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.user.User;
-import java.util.Comparator;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,15 +29,28 @@ public class NotificationService {
     private final NotificationEventRepository notificationEventRepository;
 
     @Transactional(readOnly = true)
-    public List<NotificationResponse> getAllNotifications(String providerId) {
-        User user = userRepository.findByProviderId(providerId)
-                .orElseThrow(() -> new UserException(USER_NOT_FOUND));
+    public CursorResponse<NotificationResponse> getNotifications(NotificationCursorRequest request, User user) {
+        int pageSize = request.getSize();
+        List<NotificationEvent> notifications;
 
-        // 내림차순(최신순)으로 반환
-        return user.getNotificationEvents().stream()
-                .sorted(Comparator.reverseOrder())
-                .map(NotificationResponse::fromEntity)
-                .toList();
+        if (request.getCursorDateTime() == null || request.getCursorId() == null) {
+            // 첫 번째 요청인 경우
+            notifications = notificationEventRepository.findFirstPage(user,
+                    PageRequest.of(0, pageSize, Sort.by("createdAt").descending().and(Sort.by("id").descending())));
+        } else {
+            // 두 번째 이후 요청
+            notifications = notificationEventRepository.findNextPage(user, request.getCursorDateTime(),
+                    request.getCursorId(),
+                    PageRequest.of(0, pageSize, Sort.by("createdAt").descending().and(Sort.by("id").descending())));
+        }
+
+        List<NotificationResponse> results = notifications.stream().map(NotificationResponse::fromEntity).toList();
+
+        boolean hasNext = results.size() == pageSize;
+        NotificationResponse last = results.get(results.size() - 1);
+        CursorResponse.CursorMeta nextCursor = getNextCursorFrom(last, hasNext);
+
+        return new CursorResponse<>(results, hasNext, nextCursor);
     }
 
     @Transactional
@@ -48,5 +68,20 @@ public class NotificationService {
         }
 
         return notificationEvent.read();
+    }
+
+    private CursorResponse.CursorMeta getNextCursorFrom(NotificationResponse last, boolean hasNext) {
+        if (!hasNext) {
+            return null;
+        }
+
+        LocalDateTime createdAt = Instant.ofEpochMilli(last.getCreatedAt())
+                .atZone(ZoneId.of("Asia/Seoul"))
+                .toLocalDateTime();
+
+        return CursorMeta.builder()
+                .dateTime(createdAt)
+                .id(last.getId())
+                .build();
     }
 }
