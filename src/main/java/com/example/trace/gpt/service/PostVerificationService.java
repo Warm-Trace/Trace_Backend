@@ -7,7 +7,9 @@ import com.example.trace.mission.mission.DailyMission;
 import com.example.trace.post.dto.post.PostCreateDto;
 
 public interface PostVerificationService {
-    VerificationDto verifyPost(PostCreateDto postCreateDto,String providerId);
+    VerificationDto verifyPost(PostCreateDto postCreateDto, String providerId);
+
     Verification makeVerification(VerificationDto verificationDto);
-    VerificationDto verifyDailyMission(SubmitDailyMissionDto submitDto,DailyMission assignedDailyMission);
+
+    VerificationDto verifyDailyMission(SubmitDailyMissionDto submitDto, DailyMission assignedDailyMission, String providerId);
 } 
