@@ -12,7 +12,8 @@ import org.springframework.data.repository.query.Param;
 public interface NotificationEventRepository extends JpaRepository<NotificationEvent, Long> {
     List<NotificationEvent> findAllByRefIdAndUser(Long refId, User user);
 
-    List<NotificationEvent> findFirstPage(User user, Pageable pageable);
+    @Query("SELECT n FROM NotificationEvent n WHERE n.user = :user ORDER BY n.createdAt DESC, n.id DESC")
+    List<NotificationEvent> findFirstPage(@Param("user") User user, Pageable pageable);
 
     @Query("""
                 SELECT n FROM NotificationEvent n
