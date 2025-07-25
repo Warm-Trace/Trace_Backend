@@ -20,14 +20,15 @@ import com.example.trace.post.dto.post.PostDto;
 import com.example.trace.post.service.PostService;
 import com.example.trace.user.User;
 import com.example.trace.user.UserService;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -141,7 +142,7 @@ public class DailyMissionService {
         DailyMission assignedDailyMission = dailyMissionRepository.findByUserAndCreatedAt(user, missionDate)
                 .orElseThrow(() -> new MissionException(MissionErrorCode.DAILYMISSION_NOT_FOUND));
 
-        VerificationDto verificationDto = postVerificationService.verifyDailyMission(submitDto, assignedDailyMission);
+        VerificationDto verificationDto = postVerificationService.verifyDailyMission(submitDto, assignedDailyMission, providerId);
         if (!verificationDto.isImageResult() && !verificationDto.isTextResult()) {
             throw new MissionException(MissionErrorCode.VERIFICATION_FAIL);
         }
