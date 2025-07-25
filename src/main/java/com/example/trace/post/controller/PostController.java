@@ -140,7 +140,7 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(path = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @Operation(summary = "게시글 수정", description = "게시글을 수정합니다.")
     public ResponseEntity<PostDto> updatePost(
             @PathVariable Long id,
