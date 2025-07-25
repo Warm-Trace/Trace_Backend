@@ -1,10 +1,10 @@
 package com.example.trace.post.controller;
 
 import com.example.trace.auth.dto.PrincipalDetails;
+import com.example.trace.global.response.CursorResponse;
 import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.gpt.service.PostVerificationService;
 import com.example.trace.post.domain.PostType;
-import com.example.trace.post.dto.cursor.CursorResponse;
 import com.example.trace.post.dto.cursor.PostCursorRequest;
 import com.example.trace.post.dto.post.PostCreateDto;
 import com.example.trace.post.dto.post.PostDto;

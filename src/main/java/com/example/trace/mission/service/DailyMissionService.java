@@ -2,7 +2,7 @@ package com.example.trace.mission.service;
 
 import com.example.trace.global.errorcode.MissionErrorCode;
 import com.example.trace.global.exception.MissionException;
-import com.example.trace.global.fcm.NotificationEventService;
+import com.example.trace.global.response.CursorResponse;
 import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.gpt.service.PostVerificationService;
 import com.example.trace.mission.dto.DailyMissionResponse;
@@ -13,8 +13,8 @@ import com.example.trace.mission.mission.Mission;
 import com.example.trace.mission.repository.DailyMissionRepository;
 import com.example.trace.mission.repository.MissionRepository;
 import com.example.trace.mission.util.MissionDateUtil;
+import com.example.trace.notification.service.NotificationEventService;
 import com.example.trace.post.domain.PostType;
-import com.example.trace.post.dto.cursor.CursorResponse;
 import com.example.trace.post.dto.post.PostCreateDto;
 import com.example.trace.post.dto.post.PostDto;
 import com.example.trace.post.service.PostService;

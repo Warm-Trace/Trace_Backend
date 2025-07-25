@@ -1,4 +1,4 @@
-package com.example.trace.global.fcm.domain;
+package com.example.trace.notification.domain;
 
 public enum NotificationEventType {
     NOTIFICATION, DATA;

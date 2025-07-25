@@ -1,10 +1,12 @@
-package com.example.trace.global.fcm;
+package com.example.trace.notification.service;
 
 import com.example.trace.emotion.EmotionType;
-import com.example.trace.global.fcm.domain.NotificationEvent;
-import com.example.trace.global.fcm.domain.NotificationEventType;
-import com.example.trace.global.fcm.domain.SourceType;
+import com.example.trace.global.fcm.FcmTokenNotificationService;
 import com.example.trace.mission.mission.Mission;
+import com.example.trace.notification.domain.NotificationEvent;
+import com.example.trace.notification.domain.NotificationEventType;
+import com.example.trace.notification.domain.SourceType;
+import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.post.domain.PostType;
 import com.example.trace.user.User;
 import com.fasterxml.jackson.core.JsonProcessingException;

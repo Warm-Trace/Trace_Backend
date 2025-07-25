@@ -1,6 +1,6 @@
-package com.example.trace.global.fcm;
+package com.example.trace.notification.dto;
 
-import com.example.trace.global.fcm.domain.NotificationEvent;
+import com.example.trace.notification.domain.NotificationEvent;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

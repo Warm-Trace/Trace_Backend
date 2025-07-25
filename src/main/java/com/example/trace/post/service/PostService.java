@@ -1,7 +1,7 @@
 package com.example.trace.post.service;
 
+import com.example.trace.global.response.CursorResponse;
 import com.example.trace.gpt.dto.VerificationDto;
-import com.example.trace.post.dto.cursor.CursorResponse;
 import com.example.trace.post.dto.cursor.PostCursorRequest;
 import com.example.trace.post.dto.post.PostCreateDto;
 import com.example.trace.post.dto.post.PostDto;

@@ -1,7 +1,7 @@
 package com.example.trace.user;
 
-import com.example.trace.global.fcm.domain.NotificationEvent;
 import com.example.trace.gpt.dto.VerificationDto;
+import com.example.trace.notification.domain.NotificationEvent;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

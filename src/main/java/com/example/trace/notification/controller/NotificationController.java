@@ -1,7 +1,10 @@
-package com.example.trace.global.fcm;
+package com.example.trace.notification.controller;
 
 import com.example.trace.auth.dto.PrincipalDetails;
-import com.example.trace.user.User;
+import com.example.trace.global.response.CursorResponse;
+import com.example.trace.notification.dto.NotificationCursorRequest;
+import com.example.trace.notification.dto.NotificationResponse;
+import com.example.trace.notification.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +29,12 @@ public class NotificationController {
 
     @GetMapping("/all")
     @Operation(summary = "모든 알림 가져오기", description = "알림 탭 새로고침 시 호출됩니다. 사용자의 알림을 최신순으로 정렬하여 전송합니다.")
-    public ResponseEntity<?> getAllNotifications(@AuthenticationPrincipal PrincipalDetails current) {
-        User currentUser = current.getUser();
-        return ResponseEntity.ok(notificationService.getAllNotifications(currentUser.getProviderId()));
+    public ResponseEntity<?> getNotifications(@AuthenticationPrincipal PrincipalDetails current,
+                                              NotificationCursorRequest request) {
+        CursorResponse<NotificationResponse> notifications =
+                notificationService.getNotifications(request, current.getUser());
+
+        return ResponseEntity.ok(notifications);
     }
 
     @PutMapping("/open/{id}")

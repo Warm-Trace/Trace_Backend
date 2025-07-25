@@ -5,6 +5,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.example.trace.mission.mission.Mission;
+import com.example.trace.notification.repository.NotificationEventRepository;
+import com.example.trace.notification.service.NotificationEventService;
 import com.example.trace.user.User;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;

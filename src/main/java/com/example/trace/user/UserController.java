@@ -4,7 +4,7 @@ import com.example.trace.auth.Util.JwtUtil;
 import com.example.trace.auth.dto.PrincipalDetails;
 import com.example.trace.file.FileType;
 import com.example.trace.file.S3UploadService;
-import com.example.trace.post.dto.cursor.CursorResponse;
+import com.example.trace.global.response.CursorResponse;
 import com.example.trace.post.dto.cursor.PostCursorRequest;
 import com.example.trace.post.dto.post.PostFeedDto;
 import com.example.trace.post.service.PostService;
