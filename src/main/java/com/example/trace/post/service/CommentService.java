@@ -12,15 +12,17 @@ import com.example.trace.post.dto.comment.CommentDto;
 import com.example.trace.post.dto.cursor.CommentCursorRequest;
 import com.example.trace.post.repository.CommentRepository;
 import com.example.trace.post.repository.PostRepository;
+import com.example.trace.report.service.UserBlockService;
 import com.example.trace.user.User;
 import com.example.trace.user.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +30,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserService userService;
+    private final UserBlockService userBlockService;
     private final NotificationEventService notificationEventService;
 
     public CommentDto addComment(Long postId, CommentCreateDto commentCreateDto, String providerId) {
@@ -54,8 +57,9 @@ public class CommentService {
         String postAuthorProviderId = postToAddComment.getUser().getProviderId();
         String commentAuthorUserProviderId = commentAuthorUser.getProviderId();
 
-        // 게시글 작성자가 댓글을 단게 아니라면 게시글 작성자에게 알림
-        if (!postAuthorProviderId.equals(commentAuthorUserProviderId)) {
+        // 게시글 작성자가 댓글을 단게 아니고, 댓글작성자가 게시글 작성자가 차단한 유저가 아니라면 알림 전송
+        if (!postAuthorProviderId.equals(commentAuthorUserProviderId) &&
+                !userBlockService.isBlocked(postAuthorProviderId, commentAuthorUserProviderId)) {
             User author = postToAddComment.getUser();
             PostType postType = postToAddComment.getPostType();
             String commentComment = comment.getContent();

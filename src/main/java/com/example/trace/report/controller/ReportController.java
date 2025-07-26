@@ -2,7 +2,7 @@ package com.example.trace.report.controller;
 
 import com.example.trace.auth.dto.PrincipalDetails;
 import com.example.trace.global.response.ApiResponse;
-import com.example.trace.report.dto.BlockedUserResponse;
+import com.example.trace.report.dto.BlockedUserDto;
 import com.example.trace.report.dto.ReportRequest;
 import com.example.trace.report.service.ReportService;
 import com.example.trace.report.service.UserBlockService;
@@ -52,11 +52,11 @@ public class ReportController {
 
     @GetMapping("/blocked-users")
     @Operation(summary = "차단한 사용자 목록 조회", description = "현재 사용자가 차단한 모든 사용자 목록을 조회합니다.")
-    public ResponseEntity<List<BlockedUserResponse>> getBlockedUsers(
+    public ResponseEntity<List<BlockedUserDto>> getBlockedUsers(
             @AuthenticationPrincipal PrincipalDetails principalDetails) {
 
         String blockerProviderId = principalDetails.getUser().getProviderId();
-        List<BlockedUserResponse> blockedUsers = userBlockService.getBlockedUsers(blockerProviderId);
+        List<BlockedUserDto> blockedUsers = userBlockService.getBlockedUsers(blockerProviderId);
 
         return ResponseEntity.ok(blockedUsers);
     }

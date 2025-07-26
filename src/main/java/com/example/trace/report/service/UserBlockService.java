@@ -2,9 +2,10 @@ package com.example.trace.report.service;
 
 import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.report.domain.UserBlock;
-import com.example.trace.report.dto.BlockedUserResponse;
+import com.example.trace.report.dto.BlockedUserDto;
 import com.example.trace.report.repository.UserBlockRepository;
 import com.example.trace.user.User;
+import com.example.trace.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ public class UserBlockService {
 
     private final UserRepository userRepository;
     private final UserBlockRepository userBlockRepository;
+    private final UserService userService;
 
     public void blockUser(String blockerProviderId, String blockedProviderId) {
         if (blockerProviderId.equals(blockedProviderId)) {
@@ -53,15 +55,23 @@ public class UserBlockService {
     }
 
     @Transactional(readOnly = true)
-    public List<BlockedUserResponse> getBlockedUsers(String blockerProviderId) {
+    public List<BlockedUserDto> getBlockedUsers(String blockerProviderId) {
         User blocker = userRepository.findByProviderId(blockerProviderId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         List<UserBlock> userBlocks = userBlockRepository.findAllByBlocker(blocker);
 
         return userBlocks.stream()
-                .map(BlockedUserResponse::fromEntity)
+                .map(BlockedUserDto::fromEntity)
                 .toList();
     }
+
+    @Transactional(readOnly = true)
+    public boolean isBlocked(String blockerProviderId, String blockedProviderId) {
+        User blocker = userService.getUser(blockerProviderId);
+        User blocked = userService.getUser(blockedProviderId);
+        return userBlockRepository.findByBlockerAndBlocked(blocker, blocked).isPresent();
+    }
+
 
 }

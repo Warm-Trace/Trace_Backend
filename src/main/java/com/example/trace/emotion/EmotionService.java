@@ -6,6 +6,7 @@ import com.example.trace.notification.service.NotificationEventService;
 import com.example.trace.post.domain.Post;
 import com.example.trace.post.domain.PostType;
 import com.example.trace.post.repository.PostRepository;
+import com.example.trace.report.service.UserBlockService;
 import com.example.trace.user.User;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -18,6 +19,7 @@ public class EmotionService {
     private final EmotionRepository emotionRepository;
     private final PostRepository postRepository;
     private final NotificationEventService notificationEventService;
+    private final UserBlockService userBlockService;
 
 
     @Transactional
@@ -34,7 +36,8 @@ public class EmotionService {
                     .build();
             emotionRepository.save(emotion);
 
-            if (!user.getProviderId().equals(post.getUser().getProviderId())) {
+            if (!user.getProviderId().equals(post.getUser().getProviderId()) &&
+                    !userBlockService.isBlocked(post.getUser().getProviderId(), user.getProviderId())) {
                 User postAuthor = post.getUser();
                 PostType postType = post.getPostType();
                 String nickName = user.getNickname();
@@ -50,7 +53,8 @@ public class EmotionService {
                 existingEmotion.updateEmotion(emotionType);
                 emotionRepository.save(existingEmotion);
 
-                if (!user.getProviderId().equals(post.getUser().getProviderId())) {
+                if (!user.getProviderId().equals(post.getUser().getProviderId()) &&
+                        !userBlockService.isBlocked(post.getUser().getProviderId(), user.getProviderId())) {
                     User postAuthor = post.getUser();
                     PostType postType = post.getPostType();
                     String nickName = user.getNickname();
