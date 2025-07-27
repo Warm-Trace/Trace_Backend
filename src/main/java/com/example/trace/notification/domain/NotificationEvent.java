@@ -18,6 +18,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -76,15 +77,36 @@ public class NotificationEvent implements Comparable<NotificationEvent> {
         return true;
     }
 
+    //TODO: sourceType에 따라 refId 할당
+    public NotificationEvent read() {
+        isRead = true;
+        return this;
+    }
+
+    public boolean isOwner(String providerId) {
+        return this.user.getProviderId().equals(providerId);
+    }
+
     @Override
     public int compareTo(@NotNull NotificationEvent o) {
         return this.createdAt.compareTo(o.createdAt);
     }
 
-    //TODO: sourceType에 따라 refId 할당
-    public NotificationEvent read() {
-        isRead = true;
-        return this;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof NotificationEvent)) {
+            return false;
+        }
+        NotificationEvent that = (NotificationEvent) o;
+        return this.id != null && this.id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
     /**

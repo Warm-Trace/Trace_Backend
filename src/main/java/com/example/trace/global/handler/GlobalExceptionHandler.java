@@ -1,11 +1,27 @@
 package com.example.trace.global.handler;
 
-import com.example.trace.global.errorcode.*;
-import com.example.trace.global.exception.*;
+import com.example.trace.global.errorcode.AuthErrorCode;
+import com.example.trace.global.errorcode.ErrorCode;
+import com.example.trace.global.errorcode.FileErrorCode;
+import com.example.trace.global.errorcode.GptErrorCode;
+import com.example.trace.global.errorcode.MissionErrorCode;
+import com.example.trace.global.errorcode.NotificationErrorCode;
+import com.example.trace.global.errorcode.PostErrorCode;
+import com.example.trace.global.errorcode.ReportErrorCode;
+import com.example.trace.global.errorcode.SignUpErrorCode;
+import com.example.trace.global.errorcode.TokenErrorCode;
+import com.example.trace.global.exception.AuthException;
+import com.example.trace.global.exception.FileException;
+import com.example.trace.global.exception.GptException;
+import com.example.trace.global.exception.MissionException;
+import com.example.trace.global.exception.NotificationException;
+import com.example.trace.global.exception.PostException;
+import com.example.trace.global.exception.ReportException;
+import com.example.trace.global.exception.SignUpException;
+import com.example.trace.global.exception.TokenException;
 import com.example.trace.global.response.ErrorResponse;
 import com.example.trace.global.response.GptErrorResponse;
 import com.example.trace.global.response.TokenErrorResponse;
-import com.example.trace.report.domain.Report;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -13,6 +29,13 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
+    @ExceptionHandler(NotificationException.class)
+    public ResponseEntity<ErrorResponse> handleNotificationException(NotificationException e) {
+        NotificationErrorCode notificationErrorCode = e.getNotificationErrorCode();
+        return handleExceptionInternal(notificationErrorCode);
+    }
+
     @ExceptionHandler(TokenException.class)
     public ResponseEntity<Object> handleTokenException(TokenException e) {
         TokenErrorCode tokenErrorCode = e.getTokenErrorCode();
@@ -24,6 +47,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         AuthErrorCode authErrorCode = e.getAuthErrorCode();
         return handleExceptionInternal(authErrorCode);
     }
+
     @ExceptionHandler(MissionException.class)
     public ResponseEntity<Object> handleMissionException(MissionException e) {
         MissionErrorCode missionErrorCode = e.getMissionErrorCode();
@@ -48,6 +72,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         PostErrorCode postErrorCode = e.getPostErrorCode();
         return handleExceptionInternal(postErrorCode);
     }
+
     @ExceptionHandler(ReportException.class)
     public ResponseEntity<Object> handleAuthException(ReportException e) {
         ReportErrorCode reportErrorCode = e.getReportErrorCode();
@@ -55,12 +80,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
 
-
     @ExceptionHandler(GptException.class)
     public ResponseEntity<Object> handleGptException(GptException e) {
         GptErrorCode gptErrorCode = e.getGptErrorCode();
         String failureReason = e.getFailureReason();
-        return handleExceptionInternal(gptErrorCode,failureReason);
+        return handleExceptionInternal(gptErrorCode, failureReason);
+    }
+
+    private ResponseEntity<ErrorResponse> handleExceptionInternal(NotificationErrorCode notificationErrorCode) {
+        return ResponseEntity.status(notificationErrorCode.getHttpStatus())
+                .body(makeErrorResponse(notificationErrorCode));
     }
 
     private ResponseEntity<Object> handleExceptionInternal(TokenErrorCode tokenErrorCode) {
@@ -95,7 +124,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private ResponseEntity<Object> handleExceptionInternal(GptErrorCode gptErrorCode, String failureReason) {
         return ResponseEntity.status(gptErrorCode.getHttpStatus())
-                .body(makeGptErrorResponse(gptErrorCode,failureReason));
+                .body(makeGptErrorResponse(gptErrorCode, failureReason));
     }
 
     private ResponseEntity<Object> handleExceptionInternal(ReportErrorCode reportErrorCode) {
@@ -119,6 +148,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .failureReason(failureReason)
                 .build();
     }
+
     private ErrorResponse makeErrorResponse(ErrorCode errorCode) {
         return ErrorResponse.builder()
                 .code(errorCode.name())
