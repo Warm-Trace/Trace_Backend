@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.global.response.CursorResponse;
 import com.example.trace.notification.domain.NotificationEvent;
+import com.example.trace.notification.domain.NotificationEvent.NotificationData;
 import com.example.trace.notification.domain.NotificationEventType;
 import com.example.trace.notification.domain.SourceType;
 import com.example.trace.notification.dto.NotificationCursorRequest;
@@ -15,11 +16,7 @@ import com.example.trace.notification.dto.NotificationResponse;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.notification.service.NotificationService;
 import com.example.trace.user.User;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,7 +48,7 @@ class NotificationServiceTest {
                 .build();
         NotificationCursorRequest firstRequest = NotificationCursorRequest.builder().build();
 
-        Map<String, String> data = getDataOf("mission", "");
+        NotificationData data = getDataOf("mission", "");
         NotificationEvent event = getNotificationFromData(1L, 1L, data);
 
         event.mapToUser(user);
@@ -72,7 +69,7 @@ class NotificationServiceTest {
     void read() throws Exception {
         //given
         User user = new User();
-        Map<String, String> data = getDataOf("mission", "");
+        NotificationData data = getDataOf("mission", "");
         NotificationEvent event = getNotificationFromData(1L, 1L, data);
 
         //when
@@ -89,9 +86,9 @@ class NotificationServiceTest {
     void readReferredNotifications() throws Exception {
         //given
         User user = User.builder().providerId("123").build();
-        Map<String, String> commentData1 = getDataOf("comment", "1");
-        Map<String, String> commentData2 = getDataOf("comment", "2");
-        Map<String, String> emotionData = getDataOf("emotion", "2");
+        NotificationData commentData1 = getDataOf("comment", "1");
+        NotificationData commentData2 = getDataOf("comment", "2");
+        NotificationData emotionData = getDataOf("emotion", "2");
         NotificationEvent notification1 = getNotificationFromData(1L, 10L, commentData1);
         NotificationEvent notification2 = getNotificationFromData(2L, 10L, commentData2);
         NotificationEvent notification3 = getNotificationFromData(3L, 10L, emotionData);
@@ -109,24 +106,22 @@ class NotificationServiceTest {
         assertTrue(notification3.getIsRead());
     }
 
-    private Map<String, String> getDataOf(String type, String num) {
-        Map<String, String> data = new HashMap<>();
-        data.put("type", type);
-        data.put("title", "title" + num);
-        data.put("body", "body" + num);
-        data.put("timestamp", String.valueOf(System.currentTimeMillis()));
-        return data;
+    private NotificationData getDataOf(String type, String num) {
+        return NotificationData.builder()
+                .type(SourceType.fromString(type))
+                .title("title" + num)
+                .body("body" + num)
+                .timestamp(String.valueOf(System.currentTimeMillis()))
+                .build();
     }
 
-    private NotificationEvent getNotificationFromData(Long id, Long refId, Map<String, String> data)
-            throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
+    private NotificationEvent getNotificationFromData(Long id, Long refId, NotificationData data) {
         return NotificationEvent.builder()
                 .id(id)
                 .refId(refId)
-                .data(objectMapper.writeValueAsString(data))
-                .createdAt(Long.valueOf(data.get("timestamp")))
-                .sourceType(SourceType.fromString(data.get("type")))
+                .data(data)
+                .createdAt(Long.valueOf(data.getTimestamp()))
+                .sourceType(data.getType())
                 .type(NotificationEventType.DATA)
                 .build();
     }

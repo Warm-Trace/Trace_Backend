@@ -3,6 +3,7 @@ package com.example.trace.global.fcm;
 import static com.example.trace.global.errorcode.TokenErrorCode.NOT_FOUND_FCM_TOKEN;
 
 import com.example.trace.global.exception.TokenException;
+import com.example.trace.notification.domain.NotificationEvent.NotificationData;
 import com.google.firebase.messaging.BatchResponse;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
@@ -29,8 +30,8 @@ public class FcmTokenNotificationService {
     /**
      * Data-only 메시지 전송 (notification 필드 사용 안함)
      */
-    public Map<String, String> sendDataOnlyMessage(String providerId, String title, String body,
-                                                   Map<String, String> additionalData) {
+    public NotificationData sendDataOnlyMessage(String providerId, String title, String body,
+                                                NotificationData data) {
         Optional<String> tokenOpt = fcmTokenService.getTokenByProviderId(providerId);
 
         if (tokenOpt.isEmpty()) {
@@ -41,19 +42,13 @@ public class FcmTokenNotificationService {
         String token = tokenOpt.get();
 
         // Data-only 메시지 구성 (notification 필드 없음)
-        Map<String, String> data = new HashMap<>();
-        data.put("title", title);
-        data.put("body", body);
-        data.put("timestamp", String.valueOf(System.currentTimeMillis()));
-
-        // 추가 데이터가 있으면 포함
-        if (additionalData != null) {
-            data.putAll(additionalData);
-        }
+        data.setTitle(title);
+        data.setBody(body);
+        data.setTimestamp(String.valueOf(System.currentTimeMillis()));
 
         Message message = Message.builder()
                 .setToken(token)
-                .putAllData(data)  // notification 필드 대신 data 필드만 사용
+                .putAllData(data.toMap())  // notification 필드 대신 data 필드만 사용
                 .build();
 
         log.info("fcm 알림 보내는 중..");

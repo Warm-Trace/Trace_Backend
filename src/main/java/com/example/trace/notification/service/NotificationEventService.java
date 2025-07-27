@@ -4,19 +4,16 @@ import com.example.trace.emotion.EmotionType;
 import com.example.trace.global.fcm.FcmTokenNotificationService;
 import com.example.trace.mission.mission.Mission;
 import com.example.trace.notification.domain.NotificationEvent;
+import com.example.trace.notification.domain.NotificationEvent.NotificationData;
 import com.example.trace.notification.domain.NotificationEventType;
 import com.example.trace.notification.domain.SourceType;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.post.domain.PostType;
 import com.example.trace.user.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 @Slf4j
 @Service
@@ -26,16 +23,17 @@ public class NotificationEventService {
     private final FcmTokenNotificationService fcmTokenNotificationService;
     private final NotificationEventRepository notificationEventRepository;
 
-    public Map<String, String> sendDailyMissionAssignedNotification(User user, Mission mission) {
+    public NotificationData sendDailyMissionAssignedNotification(User user, Mission mission) {
         String providerId = user.getProviderId();
-        Map<String, String> additionalData = new HashMap<>();
-        additionalData.put("type", "mission");
+        NotificationEvent.NotificationData data = NotificationData.builder()
+                .type(SourceType.MISSION)
+                .build();
 
-        Map<String, String> sentData = fcmTokenNotificationService.sendDataOnlyMessage(
+        NotificationData sentData = fcmTokenNotificationService.sendDataOnlyMessage(
                 providerId,
                 "오늘의 선행 미션 도착!",
                 mission.getDescription(),
-                additionalData
+                data
         );
 
         try {
@@ -48,15 +46,16 @@ public class NotificationEventService {
     }
 
     public void sendCommentNotification(User user, Long postId, PostType postType, String commentContent) {
-        Map<String, String> additionalData = new HashMap<>();
-        additionalData.put("type", "comment");
-        additionalData.put("postId", String.valueOf(postId));
+        NotificationEvent.NotificationData data = NotificationData.builder()
+                .type(SourceType.COMMENT)
+                .postId(postId)
+                .build();
 
-        Map<String, String> sentData = fcmTokenNotificationService.sendDataOnlyMessage(
+        NotificationData sentData = fcmTokenNotificationService.sendDataOnlyMessage(
                 user.getProviderId(),
                 postType.getType() + "게시판",
                 "새로운 댓글이 달렸어요 : " + commentContent,
-                additionalData
+                data
         );
 
         try {
@@ -73,16 +72,17 @@ public class NotificationEventService {
             PostType postType,
             EmotionType emotionType,
             String nickName) {
-        Map<String, String> additionalData = new HashMap<>();
-        additionalData.put("type", "emotion");
-        additionalData.put("postId", String.valueOf(postId));
-        additionalData.put("emotion", emotionType.name());
+        NotificationEvent.NotificationData data = NotificationData.builder()
+                .type(SourceType.EMOTION)
+                .postId(postId)
+                .emotion(emotionType)
+                .build();
 
-        Map<String, String> sentData = fcmTokenNotificationService.sendDataOnlyMessage(
+        NotificationData sentData = fcmTokenNotificationService.sendDataOnlyMessage(
                 user.getProviderId(),
                 postType.getType() + " 게시판",
                 nickName + "님이 당신의 흔적에 " + emotionType.getDescription() + "를 남겼어요",
-                additionalData
+                data
         );
 
         try {
@@ -96,23 +96,12 @@ public class NotificationEventService {
     /**
      * FCM 메시지 중 데이터 메시지를 저장하는 메서드
      */
-    private void saveDataMessage(User user, Map<String, String> data) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        String dataJson = objectMapper.writeValueAsString(data);
-        String timestamp = data.get("timestamp");
-        String sourceType = data.get("type");
-        String postId = data.get("postId");
-        long referenceId = 0L;
-
-        if (StringUtils.hasText(postId)) {
-            referenceId = Long.parseLong(postId);
-        }
-
+    private void saveDataMessage(User user, NotificationData data) throws JsonProcessingException {
         NotificationEvent event = NotificationEvent.builder()
-                .refId(referenceId)
-                .data(dataJson)
-                .createdAt(Long.valueOf(timestamp))
-                .sourceType(SourceType.fromString(sourceType))
+                .refId(data.getPostId())
+                .data(data)
+                .createdAt(Long.valueOf(data.getTimestamp()))
+                .sourceType(data.getType())
                 .type(NotificationEventType.DATA)
                 .build();
 
