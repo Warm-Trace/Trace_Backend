@@ -53,9 +53,10 @@ public class PostImage {
      *
      * @param imageUrls: s3에 저장된 이미지 url list
      */
-    public static List<PostImage> listOf(List<String> imageUrls) {
+    public static List<PostImage> listOf(List<String> imageUrls, Post post) {
         return imageUrls.stream()
                 .map(url -> PostImage.builder()
+                        .post(post)
                         .imageUrl(url)
                         .build())
                 .toList();
