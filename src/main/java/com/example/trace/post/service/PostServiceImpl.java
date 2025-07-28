@@ -266,7 +266,7 @@ public class PostServiceImpl implements PostService {
 
         if (removal != null && !removal.isEmpty()) {
             s3UploadService.deleteFiles(removal); // S3에서 이미지 삭제
-            postImageRepository.deleteAllByImageUrlIn(removal); // DB에서 이미지 행 삭제
+            post.getImages().removeIf(image -> removal.contains(image.getImageUrl())); // DB에서 이미지 행 삭제
         }
 
         if (imageFiles != null && !imageFiles.isEmpty()) {
