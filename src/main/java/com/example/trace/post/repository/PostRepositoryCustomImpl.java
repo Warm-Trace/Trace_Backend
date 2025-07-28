@@ -180,7 +180,8 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
                         post.updatedAt,
                         isVerifiedExpr,
                         isOwnerExpr(providerId),
-                        totalEmotionCount
+                        totalEmotionCount,
+                        Expressions.nullExpression(EmotionType.class)
                 ))
                 .from(post)
                 .leftJoin(post.user)
@@ -224,7 +225,8 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
                         post.updatedAt,
                         isVerifiedExpr,
                         isOwnerExpr(providerId),
-                        totalEmotionCount
+                        totalEmotionCount,
+                        Expressions.nullExpression(EmotionType.class)
                 ))
                 .from(post)
                 .leftJoin(post.user)
@@ -330,7 +332,8 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
                         post.updatedAt,
                         isVerifiedExpr,
                         isOwnerExpr(providerId),
-                        totalEmotionCount
+                        totalEmotionCount,
+                        Expressions.nullExpression(EmotionType.class)
                 ))
                 .from(post)
                 .leftJoin(post.user)
@@ -372,7 +375,8 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
                         post.updatedAt,
                         isVerifiedExpr,
                         isOwnerExpr(providerId),
-                        totalEmotionCount
+                        totalEmotionCount,
+                        Expressions.nullExpression(EmotionType.class)
                 ))
                 .from(post)
                 .leftJoin(post.user)
