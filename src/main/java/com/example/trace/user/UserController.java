@@ -61,6 +61,15 @@ public class UserController {
         return ResponseEntity.ok(userDto);
     }
 
+    @PostMapping("{providerId}/posts")
+    @Operation(summary = "다른 유저의 게시글 조회", description = "탭 별로 다른 유저의 게시글을 조회합니다.")
+    public ResponseEntity<CursorResponse<PostFeedDto>> getUserPagePosts(
+            @RequestBody PostCursorRequest request,
+            @PathVariable String providerId) {
+        CursorResponse<PostFeedDto> response = postService.getMyPagePostsWithCursor(request, providerId);
+        return ResponseEntity.ok(response);
+    }
+
 
     @Operation(summary = "유저 프로필 이미지 수정", description = "프로필 이미지를 수정합니다.")
     @PutMapping(value = "/profile/image", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})

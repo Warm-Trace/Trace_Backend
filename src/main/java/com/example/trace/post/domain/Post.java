@@ -1,5 +1,7 @@
 package com.example.trace.post.domain;
 
+import com.example.trace.global.errorcode.PostErrorCode;
+import com.example.trace.global.exception.PostException;
 import com.example.trace.gpt.domain.Verification;
 import com.example.trace.user.User;
 import jakarta.persistence.CascadeType;
@@ -23,7 +25,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,9 +36,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 @Entity
 @Table(name = "posts")
 @Data
-@Builder
 @NoArgsConstructor
-@AllArgsConstructor
 public class Post {
 
     @Id
@@ -54,7 +53,7 @@ public class Post {
     @Column(nullable = false)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", length = 800)
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -62,12 +61,11 @@ public class Post {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
-    @Builder.Default
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PostImage> images = new ArrayList<>();
+    private List<PostImage> images;
 
     @OneToMany(mappedBy = "post", orphanRemoval = true)
-    private List<Comment> commentList = new ArrayList<>();
+    private List<Comment> commentList;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -86,6 +84,29 @@ public class Post {
     @Transient
     private boolean contentModified = false;
 
+    @Builder
+    public Post(PostType postType,
+                Long viewCount,
+                String title,
+                String content,
+                User user,
+                Verification verification,
+                String missionContent) {
+
+        if (content == null || content.length() > 800) {
+            throw new PostException(PostErrorCode.CONTENT_TOO_LONG);
+        }
+
+        this.postType = postType;
+        this.viewCount = viewCount;
+        this.title = title;
+        this.content = content;
+        this.user = user;
+        this.verification = verification;
+        this.missionContent = missionContent;
+        this.images = new ArrayList<>();
+        this.commentList = new ArrayList<>();
+    }
 
     public void addImage(PostImage image) {
         this.images.add(image);
@@ -102,6 +123,9 @@ public class Post {
 
     public void editPost(String title, String content, List<PostImage> images) {
         this.title = title;
+        if (content != null && content.length() > 800) {
+            throw new PostException(PostErrorCode.CONTENT_TOO_LONG);
+        }
         this.content = content;
         this.contentModified = true;
 
