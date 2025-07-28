@@ -1,22 +1,18 @@
 package com.example.trace.global.fcm;
 
-import static com.example.trace.global.errorcode.TokenErrorCode.NOT_FOUND_FCM_TOKEN;
-
 import com.example.trace.global.exception.TokenException;
-import com.google.firebase.messaging.BatchResponse;
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingException;
-import com.google.firebase.messaging.Message;
-import com.google.firebase.messaging.MessagingErrorCode;
-import com.google.firebase.messaging.MulticastMessage;
+import com.google.firebase.messaging.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+
+import static com.example.trace.global.errorcode.TokenErrorCode.NOT_FOUND_FCM_TOKEN;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +28,7 @@ public class FcmTokenNotificationService {
     public Map<String, String> sendDataOnlyMessage(String providerId, String title, String body,
                                                    Map<String, String> additionalData) {
         Optional<String> tokenOpt = fcmTokenService.getTokenByProviderId(providerId);
+
 
         if (tokenOpt.isEmpty()) {
             log.warn("FCM 토큰을 찾을 수 없습니다 - 사용자 ID: {}", providerId);

@@ -1,5 +1,6 @@
 package com.example.trace.post.repository;
 
+import com.example.trace.emotion.EmotionType;
 import com.example.trace.post.domain.PostType;
 import com.example.trace.post.domain.QComment;
 import com.example.trace.post.domain.QPost;
@@ -400,10 +401,16 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
             Long cursorId,
             int size) {
 
+
         Expression<Long> totalEmotionCount = JPAExpressions
                 .select(emotion.count())
                 .from(emotion)
                 .where(emotion.post.eq(post));
+
+        Expression<EmotionType> userEmotionType = JPAExpressions
+                .select(emotion.emotionType)
+                .from(emotion)
+                .where(emotion.post.eq(post).and(emotion.user.providerId.eq(providerId)));
 
         return queryFactory
                 .select(Projections.constructor(PostFeedDto.class,
@@ -421,7 +428,8 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
                         post.updatedAt,
                         isVerifiedExpr,
                         isOwnerExpr(providerId),
-                        totalEmotionCount
+                        totalEmotionCount,
+                        userEmotionType
                 ))
                 .from(post)
                 .leftJoin(post.user)
