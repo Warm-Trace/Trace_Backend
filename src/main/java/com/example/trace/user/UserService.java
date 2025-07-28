@@ -9,7 +9,7 @@ import com.example.trace.global.errorcode.UserErrorCode;
 import com.example.trace.global.exception.TokenException;
 import com.example.trace.global.exception.UserException;
 import com.example.trace.report.domain.UserBlock;
-import com.example.trace.report.service.UserBlockService;
+import com.example.trace.report.repository.UserBlockRepository;
 import com.example.trace.user.dto.BlockedUserProfileDto;
 import com.example.trace.user.dto.UpdateNickNameRequest;
 import com.example.trace.user.dto.UserDto;
@@ -26,7 +26,7 @@ import static com.example.trace.global.errorcode.UserErrorCode.USER_NOT_FOUND;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-    private final UserBlockService userBlockService;
+    private final UserBlockRepository userBlockRepository;
     private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
 
@@ -41,10 +41,13 @@ public class UserService {
 
     public BlockedUserProfileDto getBlockedUserProfile(String currentUserProviderId, String targetProviderId) {
         // 차단 정보 조회
+        User currentUser = getUser(currentUserProviderId);
         User targetUser = getUser(targetProviderId);
-        UserBlock userBlcok = userBlockService.getUserBlock(currentUserProviderId, targetProviderId);
-        // 차단된 사용자 프로필 정보 반환
-        return BlockedUserProfileDto.fromEntity(targetUser, userBlcok.getCreatedAt());
+
+        UserBlock userBlock = userBlockRepository.findByBlockerAndBlocked(currentUser, targetUser)
+                .orElseThrow(() -> new IllegalArgumentException("차단 정보를 찾을 수 없습니다."));
+
+        return BlockedUserProfileDto.fromEntity(targetUser, userBlock.getCreatedAt());
     }
 
     public User getUser(String providerId) {
