@@ -1,5 +1,7 @@
 package com.example.trace.file;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
@@ -79,7 +81,20 @@ public class S3UploadService {
                 .toList();
         deleteObjectsRequest.setKeys(keys);
 
-        amazonS3.deleteObjects(deleteObjectsRequest);
+        try {
+            amazonS3.deleteObjects(deleteObjectsRequest);
+            log.info("S3 파일 삭제 완료 - keys: {}", keys);
+        } catch (AmazonServiceException ase) {
+            log.error("[S3 Object 삭제 실패 - AmazonServiceException] 오류 코드: {}, 메시지: {}, HTTP 상태: {}, S3 에러타입: {}",
+                    ase.getErrorCode(), ase.getMessage(), ase.getStatusCode(), ase.getErrorType());
+            throw new FileException(FileErrorCode.FILE_DELETE_FAILED);
+        } catch (AmazonClientException ace) {
+            log.error("[S3 Object 삭제 실패 - AmazonClientException] 메시지: {}", ace.getMessage(), ace);
+            throw new FileException(FileErrorCode.FILE_DELETE_FAILED);
+        } catch (Exception e) {
+            log.error("[S3 Object 삭제 실패 - Unknown Exception] 메시지: {}", e.getMessage(), e);
+            throw new FileException(FileErrorCode.FILE_DELETE_FAILED);
+        }
     }
 
     private String extractFilenameFromUrl(String url) {
