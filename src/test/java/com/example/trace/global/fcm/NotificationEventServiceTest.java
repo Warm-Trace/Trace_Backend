@@ -5,12 +5,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.example.trace.mission.mission.Mission;
+import com.example.trace.notification.domain.NotificationEvent.NotificationData;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.notification.service.NotificationEventService;
 import com.example.trace.user.User;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,9 +57,9 @@ class NotificationEventServiceTest {
         when(fcmTokenService.getTokenByProviderId(providerId)).thenReturn(Optional.of("token"));
         when(firebaseMessaging.send(any(Message.class))).thenReturn("response");
 
-        Map<String, String> sentData = notificationEventService.sendDailyMissionAssignedNotification(user, mission);
+        NotificationData sentData = notificationEventService.sendDailyMissionAssignedNotification(user, mission);
 
         //then
-        assertEquals(mission.getDescription(), sentData.get("body"));
+        assertEquals(mission.getDescription(), sentData.getBody());
     }
 }

@@ -5,6 +5,7 @@ import com.example.trace.global.errorcode.ErrorCode;
 import com.example.trace.global.errorcode.FileErrorCode;
 import com.example.trace.global.errorcode.GptErrorCode;
 import com.example.trace.global.errorcode.MissionErrorCode;
+import com.example.trace.global.errorcode.NotificationErrorCode;
 import com.example.trace.global.errorcode.PostErrorCode;
 import com.example.trace.global.errorcode.ReportErrorCode;
 import com.example.trace.global.errorcode.SignUpErrorCode;
@@ -13,6 +14,7 @@ import com.example.trace.global.exception.AuthException;
 import com.example.trace.global.exception.FileException;
 import com.example.trace.global.exception.GptException;
 import com.example.trace.global.exception.MissionException;
+import com.example.trace.global.exception.NotificationException;
 import com.example.trace.global.exception.PostException;
 import com.example.trace.global.exception.ReportException;
 import com.example.trace.global.exception.SignUpException;
@@ -27,6 +29,13 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
+    @ExceptionHandler(NotificationException.class)
+    public ResponseEntity<ErrorResponse> handleNotificationException(NotificationException e) {
+        NotificationErrorCode notificationErrorCode = e.getNotificationErrorCode();
+        return handleExceptionInternal(notificationErrorCode);
+    }
+
     @ExceptionHandler(TokenException.class)
     public ResponseEntity<TokenErrorResponse> handleTokenException(TokenException e) {
         TokenErrorCode tokenErrorCode = e.getTokenErrorCode();

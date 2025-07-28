@@ -1,8 +1,11 @@
 package com.example.trace.notification.service;
 
+import static com.example.trace.global.errorcode.NotificationErrorCode.NOTIFICATION_DELETE_FORBIDDEN;
+import static com.example.trace.global.errorcode.NotificationErrorCode.NOTIFICATION_NOT_FOUND;
 import static com.example.trace.global.errorcode.UserErrorCode.USER_NOT_FOUND;
 
 import com.example.trace.auth.repository.UserRepository;
+import com.example.trace.global.exception.NotificationException;
 import com.example.trace.global.exception.UserException;
 import com.example.trace.global.response.CursorResponse;
 import com.example.trace.global.response.CursorResponse.CursorMeta;
@@ -56,7 +59,7 @@ public class NotificationService {
     @Transactional
     public NotificationEvent read(Long id, String userProviderId) {
         NotificationEvent notificationEvent = notificationEventRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 알림입니다."));
+                .orElseThrow(() -> new NotificationException(NOTIFICATION_NOT_FOUND));
         User user = userRepository.findByProviderId(userProviderId)
                 .orElseThrow(() -> new UserException(USER_NOT_FOUND));
 
@@ -68,6 +71,19 @@ public class NotificationService {
         }
 
         return notificationEvent.read();
+    }
+
+    @Transactional
+    public void delete(Long notificationId, String userProviderId) {
+        NotificationEvent notification = notificationEventRepository.findById(notificationId)
+                .orElseThrow(() -> new NotificationException(NOTIFICATION_NOT_FOUND));
+
+        if (!notification.isOwner(userProviderId)) {
+            throw new NotificationException(NOTIFICATION_DELETE_FORBIDDEN);
+        }
+
+        User user = notification.getUser();
+        user.getNotificationEvents().remove(notification);
     }
 
     private CursorResponse.CursorMeta getNextCursorFrom(NotificationResponse last, boolean hasNext) {
