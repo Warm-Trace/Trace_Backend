@@ -256,7 +256,7 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public PostDto updatePost(Long id, PostUpdateDto postUpdateDto, List<MultipartFile> imageFiles, String providerId) {
         List<String> removal = postUpdateDto.getRemoval();
-        List<String> images = new ArrayList<>();
+        List<PostImage> images = new ArrayList<>();
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND));
 
@@ -272,13 +272,17 @@ public class PostServiceImpl implements PostService {
         if (imageFiles != null && !imageFiles.isEmpty()) {
             try {
                 // 추가할 이미지를 s3에 업로드 후 이미지 링크들을 리스트로 받아옴
-                images.addAll(s3UploadService.savePostFiles(imageFiles, FileType.POST, providerId));
+                List<String> savedImageUrls = s3UploadService.savePostFiles(imageFiles, FileType.POST, providerId);
+                images = postImageRepository.saveAll(PostImage.listOf(savedImageUrls));
+
+                log.info("새로 업로드된 이미지 개수: {}, URL 목록: {}",
+                        images.size(), images.stream().map(PostImage::getImageUrl).toList());
             } catch (IOException e) {
                 throw new PostException(PostErrorCode.POST_IMAGE_UPLOAD_FAILED);
             }
         }
 
-        post.editPost(postUpdateDto.getTitle(), postUpdateDto.getContent(), PostImage.listOf(images));
+        post.editPost(postUpdateDto.getTitle(), postUpdateDto.getContent(), images);
 
         Post updatedPost = postRepository.save(post);
         return PostDto.fromEntity(updatedPost);
