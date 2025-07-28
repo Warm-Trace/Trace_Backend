@@ -1,8 +1,6 @@
 package com.example.trace.user;
 
 
-import static com.example.trace.global.errorcode.UserErrorCode.USER_NOT_FOUND;
-
 import com.example.trace.auth.Util.JwtUtil;
 import com.example.trace.auth.Util.RedisUtil;
 import com.example.trace.auth.repository.UserRepository;
@@ -10,18 +8,25 @@ import com.example.trace.global.errorcode.TokenErrorCode;
 import com.example.trace.global.errorcode.UserErrorCode;
 import com.example.trace.global.exception.TokenException;
 import com.example.trace.global.exception.UserException;
+import com.example.trace.report.domain.UserBlock;
+import com.example.trace.report.service.UserBlockService;
+import com.example.trace.user.dto.BlockedUserProfileDto;
 import com.example.trace.user.dto.UpdateNickNameRequest;
 import com.example.trace.user.dto.UserDto;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static com.example.trace.global.errorcode.UserErrorCode.USER_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final UserBlockService userBlockService;
     private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
 
@@ -32,6 +37,14 @@ public class UserService {
         User user = userRepository.findByProviderId(providerId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return UserDto.fromEntity(user);
+    }
+
+    public BlockedUserProfileDto getBlockedUserProfile(String currentUserProviderId, String targetProviderId) {
+        // 차단 정보 조회
+        User targetUser = getUser(targetProviderId);
+        UserBlock userBlcok = userBlockService.getUserBlock(currentUserProviderId, targetProviderId);
+        // 차단된 사용자 프로필 정보 반환
+        return BlockedUserProfileDto.fromEntity(targetUser, userBlcok.getCreatedAt());
     }
 
     public User getUser(String providerId) {
