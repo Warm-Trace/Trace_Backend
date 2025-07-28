@@ -1,16 +1,18 @@
 package com.example.trace.report.service;
 
 import com.example.trace.auth.repository.UserRepository;
+import com.example.trace.global.exception.UserException;
 import com.example.trace.report.domain.UserBlock;
 import com.example.trace.report.dto.BlockedUserDto;
 import com.example.trace.report.repository.UserBlockRepository;
 import com.example.trace.user.User;
-import com.example.trace.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
+import static com.example.trace.global.errorcode.UserErrorCode.USER_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -18,7 +20,6 @@ public class UserBlockService {
 
     private final UserRepository userRepository;
     private final UserBlockRepository userBlockRepository;
-    private final UserService userService;
 
     public void blockUser(String blockerProviderId, String blockedProviderId) {
         if (blockerProviderId.equals(blockedProviderId)) {
@@ -68,8 +69,10 @@ public class UserBlockService {
 
     @Transactional(readOnly = true)
     public boolean isBlocked(String blockerProviderId, String blockedProviderId) {
-        User blocker = userService.getUser(blockerProviderId);
-        User blocked = userService.getUser(blockedProviderId);
+        User blocker = userRepository.findByProviderId(blockerProviderId)
+                .orElseThrow(() -> new UserException(USER_NOT_FOUND));
+        User blocked = userRepository.findByProviderId(blockedProviderId)
+                .orElseThrow(() -> new UserException(USER_NOT_FOUND));
         return userBlockRepository.findByBlockerAndBlocked(blocker, blocked).isPresent();
     }
 
