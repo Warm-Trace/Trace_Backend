@@ -8,6 +8,8 @@ import com.example.trace.global.response.CursorResponse;
 import com.example.trace.post.dto.cursor.PostCursorRequest;
 import com.example.trace.post.dto.post.PostFeedDto;
 import com.example.trace.post.service.PostService;
+import com.example.trace.report.service.UserBlockService;
+import com.example.trace.user.dto.BlockedUserProfileDto;
 import com.example.trace.user.dto.UpdateNickNameRequest;
 import com.example.trace.user.dto.UserDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +36,7 @@ import java.io.IOException;
 @Slf4j
 public class UserController {
     private final UserService userService;
+    private final UserBlockService userBlockService;
     private final JwtUtil jwtUtil;
     private final S3UploadService s3UploadService;
     private final PostService postService;
@@ -56,7 +59,17 @@ public class UserController {
 
     @Operation(summary = "다른 유저의 프로필 조회", description = "다른 유저의 프로필 정보를 가져옵니다.")
     @GetMapping("{providerId}/profile")
-    public ResponseEntity<UserDto> getUserProfile(@PathVariable String providerId) {
+    public ResponseEntity<?> getUserProfile(
+            @AuthenticationPrincipal PrincipalDetails principalDetails,
+            @PathVariable String providerId) {
+        String currentUserProviderId = principalDetails.getUser().getProviderId();
+
+        // 차단된 사용자인지 확인
+        if (userBlockService.isBlocked(currentUserProviderId, providerId)) {
+            BlockedUserProfileDto blockedProfile = userService.getBlockedUserProfile(currentUserProviderId, providerId);
+            return ResponseEntity.ok(blockedProfile);
+        }
+        // 일반 프로필 조회
         UserDto userDto = userService.getUserInfo(providerId);
         return ResponseEntity.ok(userDto);
     }
