@@ -142,6 +142,9 @@ public class PostController {
 
     @PutMapping(path = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @Operation(summary = "게시글 수정", description = "게시글을 수정합니다.")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(
+            encoding = @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE)
+    ))
     public ResponseEntity<PostDto> updatePost(
             @PathVariable Long id,
             @RequestPart("request") @Valid PostUpdateDto postUpdateDto,
