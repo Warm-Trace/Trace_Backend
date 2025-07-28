@@ -273,7 +273,7 @@ public class PostServiceImpl implements PostService {
             try {
                 // 추가할 이미지를 s3에 업로드 후 이미지 링크들을 리스트로 받아옴
                 List<String> savedImageUrls = s3UploadService.savePostFiles(imageFiles, FileType.POST, providerId);
-                images = PostImage.listOf(savedImageUrls, post);
+                images = postImageRepository.saveAll(PostImage.listOf(savedImageUrls, post));
 
                 log.info("새로 업로드된 이미지 개수: {}, URL 목록: {}",
                         images.size(), images.stream().map(PostImage::getImageUrl).toList());
