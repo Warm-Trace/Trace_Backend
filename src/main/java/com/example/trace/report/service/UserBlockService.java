@@ -73,5 +73,13 @@ public class UserBlockService {
         return userBlockRepository.findByBlockerAndBlocked(blocker, blocked).isPresent();
     }
 
+    @Transactional(readOnly = true)
+    public UserBlock getUserBlock(String blockerProviderId, String blockedProviderId) {
+        User blocker = userService.getUser(blockerProviderId);
+        User blocked = userService.getUser(blockedProviderId);
+        return userBlockRepository.findByBlockerAndBlocked(blocker, blocked)
+                .orElseThrow(() -> new IllegalArgumentException("차단된 사용자가 아닙니다."));
+    }
+
 
 }
