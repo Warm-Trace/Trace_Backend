@@ -122,12 +122,16 @@ public class Post {
     }
 
     public void editPost(String title, String content, List<PostImage> images) {
-        this.title = title;
-        if (content != null && content.length() > 800) {
-            throw new PostException(PostErrorCode.CONTENT_TOO_LONG);
+        if (title != null && !title.isBlank()) {
+            this.title = title;
         }
-        this.content = content;
-        this.contentModified = true;
+
+        if (content != null && !content.isBlank()) {
+            if (content.length() > 800) {
+                throw new PostException(PostErrorCode.CONTENT_TOO_LONG);
+            }
+            this.content = content;
+        }
 
         if (images != null && !images.isEmpty()) {
             images.forEach(this::addImage); // 추가할 이미지를 기존 이미지 리스트에 추가하면서 연관관계 매핑
@@ -135,6 +139,7 @@ public class Post {
                 this.images.get(i).setOrder(i); // 모든 order 재정렬
             }
         }
+        this.contentModified = true;
     }
 
     public boolean isOwner(String providerId) {

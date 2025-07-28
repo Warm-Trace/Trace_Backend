@@ -147,7 +147,7 @@ public class PostController {
     ))
     public ResponseEntity<PostDto> updatePost(
             @PathVariable Long id,
-            @RequestPart("request") @Valid PostUpdateDto postUpdateDto,
+            @RequestPart("request") PostUpdateDto postUpdateDto,
             @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles,
             @AuthenticationPrincipal PrincipalDetails principalDetails) {
         String providerId = principalDetails.getUser().getProviderId();
