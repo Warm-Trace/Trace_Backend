@@ -1,5 +1,6 @@
 package com.example.trace.post.dto.post;
 
+import com.example.trace.emotion.EmotionType;
 import com.example.trace.post.domain.PostType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -60,6 +61,9 @@ public class PostFeedDto {
     @JsonProperty(value = "isOwner")
     private boolean isOwner;
 
-    @Schema(description = "감정표현 개수", example ="12")
+    @Schema(description = "감정표현 개수", example = "12")
     private Long emotionCountSum;
+
+    @Schema(description = "내가 한 감정표현 타입", example = "HEARTWARMING", nullable = true)
+    private EmotionType myEmotionType;
 }
