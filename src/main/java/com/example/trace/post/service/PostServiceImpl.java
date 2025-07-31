@@ -88,7 +88,7 @@ public class PostServiceImpl implements PostService {
 
         Verification verification = null;
         if (verificationDto != null) {
-            verification = postVerificationService.makeVerification(verificationDto);
+            verification = verificationDto.toEntity();
         }
 
         Post post = Post.builder()

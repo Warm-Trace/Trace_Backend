@@ -72,15 +72,17 @@ public class User {
         if (verificationDto.isTextResult() || verificationDto.isImageResult()) {
             verificationCount++;
         }
-        if (verificationDto.isImageResult()) {
-            this.verificationScore += 10;
-        }
-        if (verificationDto.isTextResult()) {
-            this.verificationScore += 5;
-        }
+        increaseScore(verificationDto);
     }
 
     public boolean addNotification(NotificationEvent notificationEvent) {
         return this.notificationEvents.add(notificationEvent);
+    }
+
+    private void increaseScore(VerificationDto dto) {
+        switch (dto.getPostType()) {
+            case MISSION -> verificationScore += 150;
+            case GOOD_DEED -> verificationScore += 50;
+        }
     }
 }
