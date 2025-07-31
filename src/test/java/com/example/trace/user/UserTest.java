@@ -14,11 +14,10 @@ class UserTest {
     void textMissionValidation() throws Exception {
         //given
         User user = User.builder().build();
-        VerificationDto missionVerification = VerificationDto.builder()
-                .postType(PostType.MISSION).textResult(true).imageResult(false).build();
+        VerificationDto missionVerification = VerificationDto.builder().textResult(true).imageResult(false).build();
 
         //when
-        user.updateVerification(missionVerification);
+        user.updateVerification(missionVerification, PostType.MISSION);
         System.out.println(user);
         //then
         assertEquals(1L, user.getVerificationCount());
@@ -30,11 +29,10 @@ class UserTest {
     void imageMissionValidation() throws Exception {
         //given
         User user = User.builder().build();
-        VerificationDto missionVerification = VerificationDto.builder()
-                .postType(PostType.MISSION).textResult(true).imageResult(true).build();
+        VerificationDto missionVerification = VerificationDto.builder().textResult(true).imageResult(true).build();
 
         //when
-        user.updateVerification(missionVerification);
+        user.updateVerification(missionVerification, PostType.MISSION);
         System.out.println(user);
         //then
         assertEquals(1L, user.getVerificationCount());
@@ -46,11 +44,10 @@ class UserTest {
     void textPostValidation() throws Exception {
         //given
         User user = User.builder().build();
-        VerificationDto imageVerification = VerificationDto.builder()
-                .postType(PostType.GOOD_DEED).textResult(true).imageResult(false).build();
+        VerificationDto imageVerification = VerificationDto.builder().textResult(true).imageResult(false).build();
 
         //when
-        user.updateVerification(imageVerification);
+        user.updateVerification(imageVerification, PostType.GOOD_DEED);
         System.out.println(user);
         //then
         assertEquals(1L, user.getVerificationCount());
@@ -63,11 +60,10 @@ class UserTest {
     void imagePostValidation() throws Exception {
         //given
         User user = User.builder().build();
-        VerificationDto imageVerification = VerificationDto.builder()
-                .postType(PostType.GOOD_DEED).textResult(true).imageResult(true).build();
+        VerificationDto imageVerification = VerificationDto.builder().textResult(true).imageResult(true).build();
 
         //when
-        user.updateVerification(imageVerification);
+        user.updateVerification(imageVerification, PostType.GOOD_DEED);
         System.out.println(user);
         //then
         assertEquals(1L, user.getVerificationCount());

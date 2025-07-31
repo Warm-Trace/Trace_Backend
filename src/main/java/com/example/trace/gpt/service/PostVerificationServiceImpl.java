@@ -10,7 +10,6 @@ import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.mission.dto.SubmitDailyMissionDto;
 import com.example.trace.mission.mission.DailyMission;
 import com.example.trace.post.dto.post.PostCreateDto;
-import com.example.trace.user.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
@@ -84,6 +83,7 @@ public class PostVerificationServiceImpl implements PostVerificationService {
 
         if (images == null || images.isEmpty()) {
             VerificationDto result = verifyMissionTextOnly(requestContent, assignedContent);
+
             if (!result.isTextResult()) {
                 String failureReason = result.getFailureReason();
                 log.info("실패 이유 : {}", failureReason);
@@ -92,6 +92,7 @@ public class PostVerificationServiceImpl implements PostVerificationService {
             return result;
         } else {
             VerificationDto result = verifyMissionTextAndImages(requestContent, assignedContent, images);
+
             if (!result.isTextResult() || !result.isImageResult()) {
                 String failureReason = result.getFailureReason();
                 log.info("실패 이유 : {}", failureReason);
@@ -106,9 +107,6 @@ public class PostVerificationServiceImpl implements PostVerificationService {
 
     @Override
     public VerificationDto verifyPost(PostCreateDto postCreateDto, String providerId) {
-        User user = userRepository.findByProviderId(providerId)
-                .orElseThrow(() -> new PostException(PostErrorCode.USER_NOT_FOUND));
-
         checkAndIncrementDailyVerificationCount(providerId);
 
         if (postCreateDto.getContent() == null || postCreateDto.getContent().isEmpty()) {
@@ -124,6 +122,7 @@ public class PostVerificationServiceImpl implements PostVerificationService {
         if (images == null || images.isEmpty()) {
             // Only text verification is needed
             VerificationDto result = verifyTextOnly(content);
+
             if (!result.isTextResult()) {
                 String failureReason = result.getFailureReason();
                 throw new GptException(GptErrorCode.WRONG_CONTENT, failureReason);
@@ -132,6 +131,7 @@ public class PostVerificationServiceImpl implements PostVerificationService {
         } else {
             // Both text and image verification is needed
             VerificationDto result = verifyTextAndImages(content, images);
+
             if (!result.isTextResult() || !result.isImageResult()) {
                 String failureReason = result.getFailureReason();
                 throw new GptException(GptErrorCode.WRONG_CONTENT, failureReason);
