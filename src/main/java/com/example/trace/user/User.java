@@ -1,6 +1,5 @@
 package com.example.trace.user;
 
-import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.notification.domain.NotificationEvent;
 import com.example.trace.post.domain.PostType;
 import jakarta.persistence.Column;
@@ -69,10 +68,11 @@ public class User {
         this.profileImageUrl = newProfileImageUrl;
     }
 
-    public void updateVerification(VerificationDto verificationDto, PostType type) {
-        if (verificationDto.isTextResult() || verificationDto.isImageResult()) {
-            verificationCount++;
-        }
+    public void tryVerification() {
+        verificationCount++;
+    }
+
+    public void updateVerification(PostType type) {
         increaseScoreBy(type);
     }
 

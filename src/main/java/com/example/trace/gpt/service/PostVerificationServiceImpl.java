@@ -1,14 +1,12 @@
 package com.example.trace.gpt.service;
 
 import com.example.trace.auth.Util.RedisUtil;
-import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.global.errorcode.GptErrorCode;
 import com.example.trace.global.errorcode.PostErrorCode;
 import com.example.trace.global.exception.GptException;
 import com.example.trace.global.exception.PostException;
 import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.mission.dto.SubmitDailyMissionDto;
-import com.example.trace.mission.mission.DailyMission;
 import com.example.trace.post.dto.post.PostCreateDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
@@ -41,7 +39,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class PostVerificationServiceImpl implements PostVerificationService {
 
     private final OpenAiService openAiService;
-    private final UserRepository userRepository;
     private final RedisUtil redisUtil;
     private static final String MODEL = "gpt-4o";
     private static final int DAILY_VERIFICATION_LIMIT = 10;
@@ -64,7 +61,7 @@ public class PostVerificationServiceImpl implements PostVerificationService {
         }
     }
 
-    public VerificationDto verifyDailyMission(SubmitDailyMissionDto submitDto, DailyMission assignedDailyMission,
+    public VerificationDto verifyDailyMission(SubmitDailyMissionDto submitDto, String missionContent,
                                               String providerId) {
 
         if (submitDto.getContent() == null || submitDto.getContent().isEmpty()) {
@@ -79,10 +76,8 @@ public class PostVerificationServiceImpl implements PostVerificationService {
         String requestContent = submitDto.getContent();
         List<MultipartFile> images = submitDto.getImageFiles();
 
-        String assignedContent = assignedDailyMission.getMission().getDescription();
-
         if (images == null || images.isEmpty()) {
-            VerificationDto result = verifyMissionTextOnly(requestContent, assignedContent);
+            VerificationDto result = verifyMissionTextOnly(requestContent, missionContent);
 
             if (!result.isTextResult()) {
                 String failureReason = result.getFailureReason();
@@ -91,7 +86,7 @@ public class PostVerificationServiceImpl implements PostVerificationService {
             }
             return result;
         } else {
-            VerificationDto result = verifyMissionTextAndImages(requestContent, assignedContent, images);
+            VerificationDto result = verifyMissionTextAndImages(requestContent, missionContent, images);
 
             if (!result.isTextResult() || !result.isImageResult()) {
                 String failureReason = result.getFailureReason();
@@ -100,10 +95,7 @@ public class PostVerificationServiceImpl implements PostVerificationService {
             }
             return result;
         }
-
-
     }
-
 
     @Override
     public VerificationDto verifyPost(PostCreateDto postCreateDto, String providerId) {

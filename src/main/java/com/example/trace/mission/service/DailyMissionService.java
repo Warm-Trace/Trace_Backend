@@ -3,32 +3,26 @@ package com.example.trace.mission.service;
 import com.example.trace.global.errorcode.MissionErrorCode;
 import com.example.trace.global.exception.MissionException;
 import com.example.trace.global.response.CursorResponse;
-import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.gpt.service.PostVerificationService;
 import com.example.trace.mission.dto.DailyMissionResponse;
 import com.example.trace.mission.dto.MissionCursorRequest;
-import com.example.trace.mission.dto.SubmitDailyMissionDto;
 import com.example.trace.mission.mission.DailyMission;
 import com.example.trace.mission.mission.Mission;
 import com.example.trace.mission.repository.DailyMissionRepository;
 import com.example.trace.mission.repository.MissionRepository;
 import com.example.trace.mission.util.MissionDateUtil;
 import com.example.trace.notification.service.NotificationEventService;
-import com.example.trace.post.domain.PostType;
-import com.example.trace.post.dto.post.PostCreateDto;
-import com.example.trace.post.dto.post.PostDto;
 import com.example.trace.post.service.PostService;
 import com.example.trace.user.User;
 import com.example.trace.user.UserService;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -135,33 +129,14 @@ public class DailyMissionService {
         return DailyMissionResponse.fromEntity(dailyMission);
     }
 
-    public PostDto verifySubmissionAndCreatePost(String providerId, SubmitDailyMissionDto submitDto) {
-        User user = userService.getUser(providerId);
-
+    public void complete(String userProviderId, Long postId) {
+        User user = userService.getUser(userProviderId);
         LocalDate missionDate = MissionDateUtil.getMissionDate();
+
         DailyMission assignedDailyMission = dailyMissionRepository.findByUserAndCreatedAt(user, missionDate)
                 .orElseThrow(() -> new MissionException(MissionErrorCode.DAILYMISSION_NOT_FOUND));
-
-        VerificationDto verificationDto = postVerificationService.verifyDailyMission(submitDto, assignedDailyMission, providerId);
-        if (!verificationDto.isImageResult() && !verificationDto.isTextResult()) {
-            throw new MissionException(MissionErrorCode.VERIFICATION_FAIL);
-        }
-
-        PostCreateDto postCreateDto = PostCreateDto.builder()
-                .postType(PostType.MISSION)
-                .title(submitDto.getTitle())
-                .content(submitDto.getContent())
-                .imageFiles(submitDto.getImageFiles())
-                .missionContent(assignedDailyMission.getMission().getDescription())
-                .build();
-
-        PostDto postDto = postService.createPost(postCreateDto, providerId, verificationDto);
-
-        // 미션 완료 처리
-        assignedDailyMission.updateVerification(true, postDto.getId());
+        assignedDailyMission.updateVerification(true, postId);
         dailyMissionRepository.save(assignedDailyMission);
-
-        return postDto;
     }
 
     public CursorResponse<DailyMissionResponse> getCompletedMissions(User user, MissionCursorRequest request) {
