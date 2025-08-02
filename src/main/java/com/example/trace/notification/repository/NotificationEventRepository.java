@@ -4,6 +4,7 @@ import com.example.trace.notification.domain.NotificationEvent;
 import com.example.trace.user.User;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -26,7 +27,7 @@ public interface NotificationEventRepository extends JpaRepository<NotificationE
     List<NotificationEvent> findNextPage(
             @Param("user") User user,
             @Param("cursorDateTime") LocalDateTime cursorDateTime,
-            @Param("cursorId") Long cursorId,
+            @Param("cursorId") UUID cursorId,
             Pageable pageable
     );
 }

@@ -10,6 +10,7 @@ import com.example.trace.notification.domain.SourceType;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.post.domain.PostType;
 import com.example.trace.user.User;
+import com.github.f4b6a3.uuid.UuidCreator;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ public class NotificationEventService {
     public NotificationData sendDailyMissionAssignedNotification(User user, Mission mission) {
         String providerId = user.getProviderId();
         NotificationEvent.NotificationData data = NotificationData.builder()
+                .id(UuidCreator.getTimeOrderedEpoch())
                 .title("오늘의 선행 미션 도착!")
                 .body(mission.getDescription())
                 .timestamp(LocalDateTime.now())
@@ -40,6 +42,7 @@ public class NotificationEventService {
 
     public void sendCommentNotification(User user, Long postId, PostType postType, String commentContent) {
         NotificationEvent.NotificationData data = NotificationData.builder()
+                .id(UuidCreator.getTimeOrderedEpoch())
                 .title(postType.getType() + "게시판")
                 .body("새로운 댓글이 달렸어요 : " + commentContent)
                 .timestamp(LocalDateTime.now())
@@ -47,8 +50,8 @@ public class NotificationEventService {
                 .postId(postId)
                 .build();
 
-        NotificationData sentData = fcmTokenNotificationService.sendDataOnlyMessage(user.getProviderId(), data);
-        saveDataMessage(user, sentData);
+        //NotificationData sentData = fcmTokenNotificationService.sendDataOnlyMessage(user.getProviderId(), data);
+        saveDataMessage(user, data);
     }
 
     public void sendEmotionNotification(
@@ -58,6 +61,7 @@ public class NotificationEventService {
             EmotionType emotionType,
             String nickName) {
         NotificationEvent.NotificationData data = NotificationData.builder()
+                .id(UuidCreator.getTimeOrderedEpoch())
                 .title(postType.getType() + " 게시판")
                 .body(nickName + "님이 당신의 흔적에 " + emotionType.getDescription() + "를 남겼어요")
                 .timestamp(LocalDateTime.now())
@@ -75,6 +79,7 @@ public class NotificationEventService {
      */
     private void saveDataMessage(User user, NotificationData data) {
         NotificationEvent event = NotificationEvent.builder()
+                .id(data.getId())
                 .refId(data.getPostId())
                 .data(data)
                 .createdAt(data.getTimestamp())

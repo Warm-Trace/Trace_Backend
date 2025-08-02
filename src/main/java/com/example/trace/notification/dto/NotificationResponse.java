@@ -4,6 +4,7 @@ import com.example.trace.notification.domain.NotificationEvent;
 import com.example.trace.notification.domain.NotificationEvent.NotificationData;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class NotificationResponse {
     //TODO: swagger 정보 추가?
 
-    private Long id;
+    private UUID id;
 
     private LocalDateTime createdAt;
 
