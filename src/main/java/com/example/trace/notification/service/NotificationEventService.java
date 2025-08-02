@@ -34,10 +34,10 @@ public class NotificationEventService {
                 .type(SourceType.MISSION)
                 .build();
 
-        NotificationData sentData = fcmTokenNotificationService.sendDataOnlyMessage(providerId, data);
-        saveDataMessage(user, sentData);
+        fcmTokenNotificationService.sendDataOnlyMessage(providerId, data);
+        saveDataMessage(user, data);
 
-        return sentData;
+        return data;
     }
 
     public void sendCommentNotification(User user, Long postId, PostType postType, String commentContent) {
@@ -50,7 +50,7 @@ public class NotificationEventService {
                 .postId(postId)
                 .build();
 
-        //NotificationData sentData = fcmTokenNotificationService.sendDataOnlyMessage(user.getProviderId(), data);
+        fcmTokenNotificationService.sendDataOnlyMessage(user.getProviderId(), data);
         saveDataMessage(user, data);
     }
 
@@ -70,8 +70,8 @@ public class NotificationEventService {
                 .emotion(emotionType)
                 .build();
 
-        NotificationData sentData = fcmTokenNotificationService.sendDataOnlyMessage(user.getProviderId(), data);
-        saveDataMessage(user, sentData);
+        fcmTokenNotificationService.sendDataOnlyMessage(user.getProviderId(), data);
+        saveDataMessage(user, data);
     }
 
     /**

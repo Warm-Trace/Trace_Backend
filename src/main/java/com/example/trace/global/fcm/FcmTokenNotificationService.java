@@ -30,7 +30,7 @@ public class FcmTokenNotificationService {
     /**
      * Data-only 메시지 전송 (notification 필드 사용 안함)
      */
-    public NotificationData sendDataOnlyMessage(String providerId, NotificationData data) {
+    public void sendDataOnlyMessage(String providerId, NotificationData data) {
         Optional<String> tokenOpt = fcmTokenService.getTokenByProviderId(providerId);
 
         if (tokenOpt.isEmpty()) {
@@ -53,7 +53,6 @@ public class FcmTokenNotificationService {
         } catch (FirebaseMessagingException e) {
             handleFirebaseException(e, providerId, token);
         }
-        return data;
     }
 
     /**
