@@ -1,6 +1,9 @@
 package com.example.trace.notification.domain;
 
+import static com.example.trace.global.errorcode.NotificationErrorCode.TIMESTAMP_NOT_FOUND;
+
 import com.example.trace.emotion.EmotionType;
+import com.example.trace.global.exception.NotificationException;
 import com.example.trace.user.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +19,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -50,7 +54,7 @@ public class NotificationEvent implements Comparable<NotificationEvent> {
     @Convert(converter = NotificationDataConverter.class)
     private NotificationData data;
 
-    private Long createdAt;
+    private LocalDateTime createdAt;
 
     @Builder.Default
     private Boolean isRead = false;
@@ -123,10 +127,15 @@ public class NotificationEvent implements Comparable<NotificationEvent> {
         private SourceType type;
         private Long postId;
         private EmotionType emotion;
-        private String timestamp;
+        private LocalDateTime timestamp;
 
         public Map<String, String> toMap() {
             Map<String, String> map = new HashMap<>();
+            if (timestamp == null) {
+                throw new NotificationException(TIMESTAMP_NOT_FOUND);
+            }
+            map.put("timestamp", timestamp.toString());
+
             if (title != null) {
                 map.put("title", title);
             }
@@ -141,9 +150,6 @@ public class NotificationEvent implements Comparable<NotificationEvent> {
             }
             if (emotion != null) {
                 map.put("emotion", emotion.name());
-            }
-            if (timestamp != null) {
-                map.put("timestamp", timestamp);
             }
             return map;
         }

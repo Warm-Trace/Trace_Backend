@@ -100,7 +100,7 @@ public class NotificationEventService {
         NotificationEvent event = NotificationEvent.builder()
                 .refId(data.getPostId())
                 .data(data)
-                .createdAt(Long.valueOf(data.getTimestamp()))
+                .createdAt(data.getTimestamp())
                 .sourceType(data.getType())
                 .type(NotificationEventType.DATA)
                 .build();

@@ -14,9 +14,6 @@ import com.example.trace.notification.dto.NotificationCursorRequest;
 import com.example.trace.notification.dto.NotificationResponse;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.user.User;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -91,12 +88,8 @@ public class NotificationService {
             return null;
         }
 
-        LocalDateTime createdAt = Instant.ofEpochMilli(last.getCreatedAt())
-                .atZone(ZoneId.of("Asia/Seoul"))
-                .toLocalDateTime();
-
         return CursorMeta.builder()
-                .dateTime(createdAt)
+                .dateTime(last.getCreatedAt())
                 .id(last.getId())
                 .build();
     }

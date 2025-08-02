@@ -1,5 +1,7 @@
 package com.example.trace.global.fcm;
 
+import static com.example.trace.global.errorcode.TokenErrorCode.NOT_FOUND_FCM_TOKEN;
+
 import com.example.trace.global.exception.TokenException;
 import com.example.trace.notification.domain.NotificationEvent.NotificationData;
 import com.google.firebase.messaging.BatchResponse;
@@ -8,16 +10,15 @@ import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.MessagingErrorCode;
 import com.google.firebase.messaging.MulticastMessage;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static com.example.trace.global.errorcode.TokenErrorCode.NOT_FOUND_FCM_TOKEN;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +35,6 @@ public class FcmTokenNotificationService {
                                                 NotificationData data) {
         Optional<String> tokenOpt = fcmTokenService.getTokenByProviderId(providerId);
 
-
         if (tokenOpt.isEmpty()) {
             log.warn("FCM 토큰을 찾을 수 없습니다 - 사용자 ID: {}", providerId);
             throw new TokenException(NOT_FOUND_FCM_TOKEN);
@@ -45,7 +45,7 @@ public class FcmTokenNotificationService {
         // Data-only 메시지 구성 (notification 필드 없음)
         data.setTitle(title);
         data.setBody(body);
-        data.setTimestamp(String.valueOf(System.currentTimeMillis()));
+        data.setTimestamp(LocalDateTime.now());
 
         Message message = Message.builder()
                 .setToken(token)
