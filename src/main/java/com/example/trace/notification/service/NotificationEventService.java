@@ -10,7 +10,6 @@ import com.example.trace.notification.domain.SourceType;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.post.domain.PostType;
 import com.example.trace.user.User;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,12 +35,7 @@ public class NotificationEventService {
                 data
         );
 
-        try {
-            saveDataMessage(user, sentData);
-        } catch (JsonProcessingException e) {
-            log.error("전송한 FCM Data Message를 Json으로 직렬화하는데 실패했습니다. - data: {}", sentData);
-            throw new RuntimeException(e);
-        }
+        saveDataMessage(user, sentData);
         return sentData;
     }
 
@@ -58,12 +52,7 @@ public class NotificationEventService {
                 data
         );
 
-        try {
-            saveDataMessage(user, sentData);
-        } catch (JsonProcessingException e) {
-            log.error("전송한 FCM Data Message를 Json으로 직렬화하는데 실패했습니다. - data: {}", sentData);
-            throw new RuntimeException(e);
-        }
+        saveDataMessage(user, sentData);
     }
 
     public void sendEmotionNotification(
@@ -85,18 +74,13 @@ public class NotificationEventService {
                 data
         );
 
-        try {
-            saveDataMessage(user, sentData);
-        } catch (JsonProcessingException e) {
-            log.error("전송한 FCM Data Message를 Json으로 직렬화하는데 실패했습니다. - data: {}", sentData);
-            throw new RuntimeException(e);
-        }
+        saveDataMessage(user, sentData);
     }
 
     /**
      * FCM 메시지 중 데이터 메시지를 저장하는 메서드
      */
-    private void saveDataMessage(User user, NotificationData data) throws JsonProcessingException {
+    private void saveDataMessage(User user, NotificationData data) {
         NotificationEvent event = NotificationEvent.builder()
                 .refId(data.getPostId())
                 .data(data)
