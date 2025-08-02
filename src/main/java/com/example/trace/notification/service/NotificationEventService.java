@@ -10,6 +10,7 @@ import com.example.trace.notification.domain.SourceType;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.post.domain.PostType;
 import com.example.trace.user.User;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,33 +26,28 @@ public class NotificationEventService {
     public NotificationData sendDailyMissionAssignedNotification(User user, Mission mission) {
         String providerId = user.getProviderId();
         NotificationEvent.NotificationData data = NotificationData.builder()
+                .title("오늘의 선행 미션 도착!")
+                .body(mission.getDescription())
+                .timestamp(LocalDateTime.now())
                 .type(SourceType.MISSION)
                 .build();
 
-        NotificationData sentData = fcmTokenNotificationService.sendDataOnlyMessage(
-                providerId,
-                "오늘의 선행 미션 도착!",
-                mission.getDescription(),
-                data
-        );
-
+        NotificationData sentData = fcmTokenNotificationService.sendDataOnlyMessage(providerId, data);
         saveDataMessage(user, sentData);
+
         return sentData;
     }
 
     public void sendCommentNotification(User user, Long postId, PostType postType, String commentContent) {
         NotificationEvent.NotificationData data = NotificationData.builder()
+                .title(postType.getType() + "게시판")
+                .body("새로운 댓글이 달렸어요 : " + commentContent)
+                .timestamp(LocalDateTime.now())
                 .type(SourceType.COMMENT)
                 .postId(postId)
                 .build();
 
-        NotificationData sentData = fcmTokenNotificationService.sendDataOnlyMessage(
-                user.getProviderId(),
-                postType.getType() + "게시판",
-                "새로운 댓글이 달렸어요 : " + commentContent,
-                data
-        );
-
+        NotificationData sentData = fcmTokenNotificationService.sendDataOnlyMessage(user.getProviderId(), data);
         saveDataMessage(user, sentData);
     }
 
@@ -62,18 +58,15 @@ public class NotificationEventService {
             EmotionType emotionType,
             String nickName) {
         NotificationEvent.NotificationData data = NotificationData.builder()
+                .title(postType.getType() + " 게시판")
+                .body(nickName + "님이 당신의 흔적에 " + emotionType.getDescription() + "를 남겼어요")
+                .timestamp(LocalDateTime.now())
                 .type(SourceType.EMOTION)
                 .postId(postId)
                 .emotion(emotionType)
                 .build();
 
-        NotificationData sentData = fcmTokenNotificationService.sendDataOnlyMessage(
-                user.getProviderId(),
-                postType.getType() + " 게시판",
-                nickName + "님이 당신의 흔적에 " + emotionType.getDescription() + "를 남겼어요",
-                data
-        );
-
+        NotificationData sentData = fcmTokenNotificationService.sendDataOnlyMessage(user.getProviderId(), data);
         saveDataMessage(user, sentData);
     }
 

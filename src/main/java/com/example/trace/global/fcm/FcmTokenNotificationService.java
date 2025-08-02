@@ -10,7 +10,6 @@ import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.MessagingErrorCode;
 import com.google.firebase.messaging.MulticastMessage;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,8 +30,7 @@ public class FcmTokenNotificationService {
     /**
      * Data-only 메시지 전송 (notification 필드 사용 안함)
      */
-    public NotificationData sendDataOnlyMessage(String providerId, String title, String body,
-                                                NotificationData data) {
+    public NotificationData sendDataOnlyMessage(String providerId, NotificationData data) {
         Optional<String> tokenOpt = fcmTokenService.getTokenByProviderId(providerId);
 
         if (tokenOpt.isEmpty()) {
@@ -41,11 +39,6 @@ public class FcmTokenNotificationService {
         }
 
         String token = tokenOpt.get();
-
-        // Data-only 메시지 구성 (notification 필드 없음)
-        data.setTitle(title);
-        data.setBody(body);
-        data.setTimestamp(LocalDateTime.now());
 
         Message message = Message.builder()
                 .setToken(token)

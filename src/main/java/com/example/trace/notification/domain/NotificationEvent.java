@@ -27,7 +27,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 @Entity
@@ -117,16 +116,16 @@ public class NotificationEvent implements Comparable<NotificationEvent> {
      * Notification의 data 필으데 직렬화되어 저장될 구조체
      */
     @Getter
-    @Setter
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
     public static class NotificationData {
-        private String title;
-        private String body;
+        private Long id;
         private SourceType type;
         private Long postId;
         private EmotionType emotion;
+        private String title;
+        private String body;
         private LocalDateTime timestamp;
 
         public Map<String, String> toMap() {
