@@ -21,6 +21,8 @@ public class NotificationResponse {
 
     private LocalDateTime createdAt;
 
+    private Boolean isRead;
+
     private String title;
 
     private String body;
@@ -31,12 +33,14 @@ public class NotificationResponse {
         return switch (event.getType()) {
             case DATA -> NotificationResponse.builder()
                     .id(event.getId())
+                    .isRead(event.getIsRead())
                     .createdAt(event.getCreatedAt())
                     .data(event.getData())
                     .build();
 
             case NOTIFICATION -> NotificationResponse.builder()
                     .id(event.getId())
+                    .isRead(event.getIsRead())
                     .createdAt(event.getCreatedAt())
                     .title(event.getTitle())
                     .body(event.getBody())
