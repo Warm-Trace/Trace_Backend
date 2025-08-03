@@ -85,16 +85,16 @@ public class PostVerificationServiceImpl implements PostVerificationService {
                 throw new GptException(GptErrorCode.WRONG_CONTENT, failureReason);
             }
             return result;
-        } else {
-            VerificationDto result = verifyMissionTextAndImages(requestContent, missionContent, images);
-
-            if (!result.isTextResult() || !result.isImageResult()) {
-                String failureReason = result.getFailureReason();
-                log.info("실패 이유 : {}", failureReason);
-                throw new GptException(GptErrorCode.WRONG_CONTENT, failureReason);
-            }
-            return result;
         }
+        VerificationDto result = verifyMissionTextAndImages(requestContent, missionContent, images);
+
+        if (!result.isTextResult() || !result.isImageResult()) {
+            String failureReason = result.getFailureReason();
+            log.info("실패 이유 : {}", failureReason);
+            throw new GptException(GptErrorCode.WRONG_CONTENT, failureReason);
+        }
+        return result;
+
     }
 
     @Override

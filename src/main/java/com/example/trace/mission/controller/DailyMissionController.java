@@ -2,7 +2,6 @@ package com.example.trace.mission.controller;
 
 import com.example.trace.auth.dto.PrincipalDetails;
 import com.example.trace.global.response.CursorResponse;
-import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.gpt.service.PostVerificationService;
 import com.example.trace.mission.dto.AssignMissionRequest;
 import com.example.trace.mission.dto.DailyMissionResponse;
@@ -10,7 +9,6 @@ import com.example.trace.mission.dto.MissionCursorRequest;
 import com.example.trace.mission.dto.SubmitDailyMissionDto;
 import com.example.trace.mission.service.DailyMissionService;
 import com.example.trace.mission.util.MissionDateUtil;
-import com.example.trace.post.dto.post.PostCreateDto;
 import com.example.trace.post.dto.post.PostDto;
 import com.example.trace.post.service.PostService;
 import com.example.trace.user.User;
@@ -106,13 +104,7 @@ public class DailyMissionController {
             dailyMissionDto.setImageFiles(imageFiles.subList(0, maxImages));
         }
         String providerId = principalDetails.getUser().getProviderId();
-        DailyMissionResponse dailyMission = missionService.getTodaysMissionByProviderId(providerId);
-        VerificationDto verificationDto =
-                postVerificationService.verifyDailyMission(dailyMissionDto, dailyMission.getContent(), providerId);
-
-        PostCreateDto postCreateDto = PostCreateDto.createForMission(dailyMissionDto, dailyMission.getContent());
-        PostDto postDto = postService.createPost(postCreateDto, providerId, verificationDto);
-        missionService.complete(providerId, postDto.getId());
+        PostDto postDto = missionService.handleSubmittedMission(dailyMissionDto, providerId);
 
         return ResponseEntity.ok(postDto);
     }
