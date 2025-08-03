@@ -76,7 +76,7 @@ public class PostServiceImpl implements PostService {
         PostType postType = postCreateDto.getPostType();
 
         if (verificationDto != null) {
-            user.updateVerification(postType);
+            user.updateVerification(verificationDto, postType);
         }
 
         if (postCreateDto.getContent() == null || postCreateDto.getContent().isEmpty()) {

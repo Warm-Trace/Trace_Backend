@@ -86,6 +86,7 @@ public class PostVerificationServiceImpl implements PostVerificationService {
             }
             return result;
         }
+
         VerificationDto result = verifyMissionTextAndImages(requestContent, missionContent, images);
 
         if (!result.isTextResult() || !result.isImageResult()) {

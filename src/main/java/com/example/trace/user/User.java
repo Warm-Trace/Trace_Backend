@@ -1,5 +1,6 @@
 package com.example.trace.user;
 
+import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.notification.domain.NotificationEvent;
 import com.example.trace.post.domain.PostType;
 import jakarta.persistence.Column;
@@ -72,18 +73,11 @@ public class User {
         verificationCount++;
     }
 
-    public void updateVerification(PostType type) {
-        increaseScoreBy(type);
+    public void updateVerification(VerificationDto verificationDto, PostType type) {
+        this.verificationScore += type.getTotalScore(verificationDto);
     }
 
     public boolean addNotification(NotificationEvent notificationEvent) {
         return this.notificationEvents.add(notificationEvent);
-    }
-
-    private void increaseScoreBy(PostType type) {
-        switch (type) {
-            case MISSION -> verificationScore += 150;
-            case GOOD_DEED -> verificationScore += 50;
-        }
     }
 }

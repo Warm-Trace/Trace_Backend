@@ -58,6 +58,7 @@ public class DailyMissionService {
 
         PostCreateDto postCreateDto = PostCreateDto.createForMission(dailyMissionDto, description);
         PostDto postDto = postService.createPost(postCreateDto, userProviderId, verificationDto);
+
         complete(dailyMission, postDto.getId());
         return postDto;
     }
