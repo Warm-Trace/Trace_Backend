@@ -45,7 +45,7 @@ public class NotificationController {
 
     @PutMapping("/open/{id}")
     @Operation(summary = "알림 읽기", description = "알림을 읽을 때 호출됩니다.")
-    public ResponseEntity<?> read(@PathVariable("id") Long notificationId,
+    public ResponseEntity<?> read(@PathVariable("id") UUID notificationId,
                                   @AuthenticationPrincipal PrincipalDetails current) {
         notificationService.read(notificationId, current.getUser().getProviderId());
         return ResponseEntity.ok().build();
@@ -53,7 +53,7 @@ public class NotificationController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "알림 삭제", description = "알림을 삭제하며 이는 되돌릴 수 없습니다.")
-    public ResponseEntity<?> delete(@PathVariable("id") Long notificationId,
+    public ResponseEntity<?> delete(@PathVariable("id") UUID notificationId,
                                     @AuthenticationPrincipal PrincipalDetails current) {
         notificationService.delete(notificationId, current.getUser().getProviderId());
         return ResponseEntity.ok("삭제되었습니다.");

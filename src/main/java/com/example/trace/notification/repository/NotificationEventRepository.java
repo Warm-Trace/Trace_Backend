@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface NotificationEventRepository extends JpaRepository<NotificationEvent, Long> {
+public interface NotificationEventRepository extends JpaRepository<NotificationEvent, UUID> {
     List<NotificationEvent> findAllByRefIdAndUser(Long refId, User user);
 
     @Query("SELECT n FROM NotificationEvent n WHERE n.user = :user ORDER BY n.createdAt DESC, n.id DESC")

@@ -58,7 +58,7 @@ public class NotificationService {
     }
 
     @Transactional
-    public NotificationEvent read(Long id, String userProviderId) {
+    public NotificationEvent read(UUID id, String userProviderId) {
         NotificationEvent notificationEvent = notificationEventRepository.findById(id)
                 .orElseThrow(() -> new NotificationException(NOTIFICATION_NOT_FOUND));
         User user = userRepository.findByProviderId(userProviderId)
@@ -75,7 +75,7 @@ public class NotificationService {
     }
 
     @Transactional
-    public void delete(Long notificationId, String userProviderId) {
+    public void delete(UUID notificationId, String userProviderId) {
         NotificationEvent notification = notificationEventRepository.findById(notificationId)
                 .orElseThrow(() -> new NotificationException(NOTIFICATION_NOT_FOUND));
 
@@ -85,6 +85,7 @@ public class NotificationService {
 
         User user = notification.getUser();
         user.getNotificationEvents().remove(notification);
+        notificationEventRepository.delete(notification);
     }
 
     private CursorNotificationResponse.CursorMeta getNextCursorFrom(NotificationResponse last, boolean hasNext) {

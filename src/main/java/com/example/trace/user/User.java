@@ -56,7 +56,7 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
-    @OneToMany(mappedBy = "user", orphanRemoval = true)
+    @OneToMany(mappedBy = "user")
     @Builder.Default
     private List<NotificationEvent> notificationEvents = new ArrayList<>();
 
