@@ -1,5 +1,6 @@
 package com.example.trace.mission.service;
 
+import com.example.trace.bird.BirdService;
 import com.example.trace.global.errorcode.MissionErrorCode;
 import com.example.trace.global.exception.MissionException;
 import com.example.trace.global.response.CursorResponse;
@@ -42,6 +43,7 @@ public class DailyMissionService {
     private final PostVerificationService postVerificationService;
     private final PostService postService;
     private final NotificationEventService notificationEventService;
+    private final BirdService birdService;
 
     private static final int MAX_CHANGES_PER_DAY = 10;
     private static final int DEFAULT_PAGE_SIZE = 20;
@@ -157,8 +159,10 @@ public class DailyMissionService {
 
         PostDto postDto = postService.createPost(postCreateDto, providerId, verificationDto);
 
-        // 미션 완료 처리
         assignedDailyMission.updateVerification(true, postDto.getId());
+        user.updateCompletedMissionCount();
+        birdService.checkAndUnlockBirdLevel(user);
+
         dailyMissionRepository.save(assignedDailyMission);
 
         return postDto;

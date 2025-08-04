@@ -1,6 +1,7 @@
 package com.example.trace.post.service;
 
 import com.example.trace.auth.repository.UserRepository;
+import com.example.trace.bird.BirdService;
 import com.example.trace.emotion.EmotionService;
 import com.example.trace.emotion.EmotionType;
 import com.example.trace.emotion.dto.EmotionCountDto;
@@ -25,14 +26,15 @@ import com.example.trace.post.dto.post.PostUpdateDto;
 import com.example.trace.post.repository.PostImageRepository;
 import com.example.trace.post.repository.PostRepository;
 import com.example.trace.user.User;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -49,6 +51,7 @@ public class PostServiceImpl implements PostService {
     private final EmotionService emotionService;
     private final DailyMissionRepository dailyMissionRepository;
     private final PostImageRepository postImageRepository;
+    private final BirdService birdService;
 
     @Override
     @Transactional
@@ -76,6 +79,7 @@ public class PostServiceImpl implements PostService {
 
         if (verificationDto != null) {
             user.updateVerification(verificationDto);
+            birdService.checkAndUnlockBirdLevel(user);
         }
 
         if (postCreateDto.getContent() == null || postCreateDto.getContent().isEmpty()) {
