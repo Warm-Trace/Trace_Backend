@@ -1,5 +1,8 @@
 package com.example.trace.bird;
 
+import lombok.Getter;
+
+@Getter
 public enum BirdLevel {
     EGG(0, "알", 0, 0),
     BABY_BIRD(1, "새끼", 1, 1),

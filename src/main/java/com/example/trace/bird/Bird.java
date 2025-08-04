@@ -2,12 +2,16 @@ package com.example.trace.bird;
 
 import com.example.trace.user.User;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class Bird {
     @Id
     private Long id;
@@ -21,4 +25,7 @@ public class Bird {
 
     private boolean isSelected;
 
+    public void deselect() {
+        isSelected = false;
+    }
 }

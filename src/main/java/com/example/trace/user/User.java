@@ -40,6 +40,9 @@ public class User {
     @Builder.Default
     private Long verificationCount = 0L;
 
+    @Builder.Default
+    private Long completedMissionCount = 0L;
+
     //spring security용으로 일단 두기.
     private String password;
 
@@ -71,6 +74,10 @@ public class User {
         if (verificationDto.isTextResult()) {
             this.verificationScore += 5;
         }
+    }
+
+    public void updateCompletedMissionCount() {
+        this.completedMissionCount++;
     }
 
     public boolean addNotification(NotificationEvent notificationEvent) {
