@@ -1,7 +1,10 @@
 package com.example.trace.notification.dto;
 
 import com.example.trace.notification.domain.NotificationEvent;
+import com.example.trace.notification.domain.NotificationEvent.NotificationData;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,26 +18,30 @@ import lombok.NoArgsConstructor;
 public class NotificationResponse {
     //TODO: swagger 정보 추가?
 
-    private Long id;
+    private UUID id;
 
-    private Long createdAt;
+    private LocalDateTime createdAt;
+
+    private Boolean isRead;
 
     private String title;
 
     private String body;
 
-    private Object data;
+    private NotificationData data;
 
     public static NotificationResponse fromEntity(NotificationEvent event) {
         return switch (event.getType()) {
             case DATA -> NotificationResponse.builder()
                     .id(event.getId())
+                    .isRead(event.getIsRead())
                     .createdAt(event.getCreatedAt())
                     .data(event.getData())
                     .build();
 
             case NOTIFICATION -> NotificationResponse.builder()
                     .id(event.getId())
+                    .isRead(event.getIsRead())
                     .createdAt(event.getCreatedAt())
                     .title(event.getTitle())
                     .body(event.getBody())

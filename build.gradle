@@ -71,8 +71,12 @@ dependencies {
     implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
-    //Jackson
+    // Jackson
     implementation 'com.fasterxml.jackson.core:jackson-core:2.18.3'
+
+    // UUID
+    implementation 'com.github.f4b6a3:uuid-creator:6.1.1'
+
 }
 
 
