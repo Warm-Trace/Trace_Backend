@@ -60,6 +60,7 @@ public class NotificationEvent implements Comparable<NotificationEvent> {
     @Convert(converter = NotificationDataConverter.class)
     private NotificationData data;
 
+    @Column(name = "created_at", columnDefinition = "DATETIME(6)")
     private LocalDateTime createdAt;
 
     @Builder.Default
