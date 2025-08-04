@@ -17,7 +17,10 @@ import com.example.trace.post.domain.Post;
 import com.example.trace.post.domain.PostImage;
 import com.example.trace.post.domain.PostType;
 import com.example.trace.post.domain.cursor.SearchType;
+import com.example.trace.post.dto.cursor.MyPagePostRequest;
 import com.example.trace.post.dto.cursor.PostCursorRequest;
+import com.example.trace.post.dto.cursor.PostFeedRequest;
+import com.example.trace.post.dto.cursor.PostSearchRequest;
 import com.example.trace.post.dto.post.PostCreateDto;
 import com.example.trace.post.dto.post.PostDto;
 import com.example.trace.post.dto.post.PostFeedDto;
@@ -25,14 +28,15 @@ import com.example.trace.post.dto.post.PostUpdateDto;
 import com.example.trace.post.repository.PostImageRepository;
 import com.example.trace.post.repository.PostRepository;
 import com.example.trace.user.User;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -155,7 +159,7 @@ public class PostServiceImpl implements PostService {
 
 
     @Transactional(readOnly = true)
-    public CursorResponse<PostFeedDto> getAllPostsWithCursor(PostCursorRequest request, String providerId) {
+    public CursorResponse<PostFeedDto> getAllPostsWithCursor(PostFeedRequest request, String providerId) {
         // 커서 요청 처리
         int size = request.getSize() != null ? request.getSize() : 10;
 
@@ -197,7 +201,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
-    public CursorResponse<PostFeedDto> searchPostsWithCursor(PostCursorRequest request, String providerId) {
+    public CursorResponse<PostFeedDto> searchPostsWithCursor(PostSearchRequest request, String providerId) {
         int size = request.getSize() != null ? request.getSize() : 10;
 
         // 검색어가 있는 경우 검색 메서드 사용, 없으면 기존 메서드 사용
@@ -444,7 +448,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
-    public CursorResponse<PostFeedDto> getMyPagePostsWithCursor(PostCursorRequest request, String providerId) {
+    public CursorResponse<PostFeedDto> getMyPagePostsWithCursor(MyPagePostRequest request, String providerId) {
         int size = request.getSize() != null ? request.getSize() : 10;
         List<PostFeedDto> posts;
 
