@@ -18,20 +18,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.time.LocalDate;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDate;
+import java.util.List;
 
 
 @RestController
@@ -64,6 +60,12 @@ public class DailyMissionController {
         String providerId = principalDetails.getUser().getProviderId();
         DailyMissionResponse response = missionService.changeDailyMission(providerId);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/assign-all")
+    public ResponseEntity<Void> assignMissionsToAll() {
+        missionService.assignDailyMissionsToAllUsers();
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/assign/test")
