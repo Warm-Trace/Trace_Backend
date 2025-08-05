@@ -48,24 +48,24 @@ public class DailyMissionService {
 
 
     @Scheduled(cron = "0 0 7 * * *")
-    @Transactional
     public void assignDailyMissionsToAllUsers() {
-        try {
-            LocalDate today = LocalDate.now();
-            List<User> users = userService.getAllUsers();
+        LocalDate today = LocalDate.now();
+        List<User> users = userService.getAllUsers();
 
-            for (User user : users) {
+        for (User user : users) {
+
+            try {
                 Optional<DailyMission> existingMission = dailyMissionRepository.findByUserAndCreatedAt(user, today);
-
                 if (existingMission.isPresent()) {
                     continue;
                 }
-
                 assignDailyMissionsToUser(user, today);
+            } catch (Exception e) {
+                log.error("유저 ID {}에게 데일리 미션 할당 실패: {}", user.getId(), e.getMessage(), e);
             }
-        } catch (Exception e) {
-            System.err.println("자동 미션 할당 실패: " + e.getMessage());
+
         }
+
     }
 
 
