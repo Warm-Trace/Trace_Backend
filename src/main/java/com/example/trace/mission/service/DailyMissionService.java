@@ -60,6 +60,7 @@ public class DailyMissionService {
                     continue;
                 }
                 assignDailyMissionsToUser(user, today);
+                log.info("유저 : {}에게 데일리 미션 할당 성공", user.getProviderId());
             } catch (Exception e) {
                 log.error("유저 ID {}에게 데일리 미션 할당 실패: {}", user.getId(), e.getMessage(), e);
             }
