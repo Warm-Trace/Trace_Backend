@@ -41,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final List<String> excludePathPatterns = List.of(
             "/auth/oauth/**",
             "/h2-console/**",
-            "/api/v1/api/user/*",
+            "/user/*",
             "/idtoken",
             "/token/refresh",
             // Swagger UI v3 (OpenAPI)
@@ -56,9 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        
-        //
+        String path = request.getServletPath();
         return excludePathPatterns.stream()
                 .anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
