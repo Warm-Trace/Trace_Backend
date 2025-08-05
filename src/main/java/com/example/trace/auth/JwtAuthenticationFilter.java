@@ -1,27 +1,26 @@
 package com.example.trace.auth;
 
 
+import com.example.trace.auth.Util.JwtUtil;
+import com.example.trace.auth.Util.RedisUtil;
+import com.example.trace.auth.dto.PrincipalDetails;
+import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.global.errorcode.TokenErrorCode;
 import com.example.trace.global.exception.TokenException;
 import com.example.trace.user.User;
-import com.example.trace.auth.dto.PrincipalDetails;
-import com.example.trace.auth.Util.JwtUtil;
-import com.example.trace.auth.Util.RedisUtil;
-import com.example.trace.auth.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.util.AntPathMatcher;
-
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
@@ -44,6 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/user/*",
             "/idtoken",
             "/token/refresh",
+            "/actuator/**",
             // Swagger UI v3 (OpenAPI)
             "/v3/api-docs/**",
             "/api-docs/**",
@@ -67,7 +67,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        try{
+        try {
             log.info("[*] Jwt Filter - Request URI: {}", request.getRequestURI());
             String accessToken = jwtUtil.resolveAccessToken(request);
 
@@ -86,7 +86,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 throw new TokenException(TokenErrorCode.LOGOUT_TOKEN);
             }
 
-            if (redisUtil.get(accessToken) != null && redisUtil.get(accessToken).equals("delete")){
+            if (redisUtil.get(accessToken) != null && redisUtil.get(accessToken).equals("delete")) {
                 log.info("[*] Deleted account accessToken");
                 throw new TokenException(TokenErrorCode.DELETED_USER);
             }
@@ -97,7 +97,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // accessToken에서 providerId 추출
             String providerId = jwtUtil.getProviderId(accessToken);
             // accessToken에서 providerId로 User 객체를 가져옴
-            User user = userRepository.findByProviderIdAndProvider(providerId,"KAKAO").orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            User user = userRepository.findByProviderIdAndProvider(providerId, "KAKAO").orElseThrow(() -> new UsernameNotFoundException("User not found"));
             // accesstoken을 기반으로 principalDetail 저장
             PrincipalDetails principalDetails = new PrincipalDetails(user);
 
@@ -113,11 +113,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
 
-        }catch (TokenException e){
+        } catch (TokenException e) {
             log.error("[*] Jwt Filter - TokenException: {}", e.getMessage());
             handlerExceptionResolver.resolveException(request, response, null, e);
 
-        } catch (Exception e){
+        } catch (Exception e) {
             log.error("[*] Jwt Filter - Exception: {}", e.getMessage());
         }
 
