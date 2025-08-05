@@ -48,7 +48,6 @@ public class DailyMissionService {
 
 
     @Scheduled(cron = "0 0 7 * * *")
-    @Transactional
     public void assignDailyMissionsToAllUsers() {
         LocalDate today = LocalDate.now();
         List<User> users = userService.getAllUsers();
