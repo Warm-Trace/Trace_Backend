@@ -2,6 +2,7 @@ package com.example.trace.user;
 
 import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.notification.domain.NotificationEvent;
+import com.example.trace.post.domain.PostType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -68,16 +69,12 @@ public class User {
         this.profileImageUrl = newProfileImageUrl;
     }
 
-    public void updateVerification(VerificationDto verificationDto) {
-        if (verificationDto.isTextResult() || verificationDto.isImageResult()) {
-            verificationCount++;
-        }
-        if (verificationDto.isImageResult()) {
-            this.verificationScore += 10;
-        }
-        if (verificationDto.isTextResult()) {
-            this.verificationScore += 5;
-        }
+    public void tryVerification() {
+        verificationCount++;
+    }
+
+    public void updateVerification(VerificationDto verificationDto, PostType type) {
+        this.verificationScore += type.getTotalScore(verificationDto);
     }
 
     public boolean addNotification(NotificationEvent notificationEvent) {

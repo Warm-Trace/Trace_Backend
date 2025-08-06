@@ -1,22 +1,27 @@
 package com.example.trace.gpt.service;
 
 import com.example.trace.auth.Util.RedisUtil;
-import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.global.errorcode.GptErrorCode;
 import com.example.trace.global.errorcode.PostErrorCode;
 import com.example.trace.global.exception.GptException;
 import com.example.trace.global.exception.PostException;
-import com.example.trace.gpt.domain.Verification;
 import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.mission.dto.SubmitDailyMissionDto;
-import com.example.trace.mission.mission.DailyMission;
 import com.example.trace.post.dto.post.PostCreateDto;
-import com.example.trace.user.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.completion.chat.ChatMessageRole;
 import com.theokanning.openai.service.OpenAiService;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,19 +33,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class PostVerificationServiceImpl implements PostVerificationService {
 
     private final OpenAiService openAiService;
-    private final UserRepository userRepository;
     private final RedisUtil redisUtil;
     private static final String MODEL = "gpt-4o";
     private static final int DAILY_VERIFICATION_LIMIT = 10;
@@ -63,7 +61,8 @@ public class PostVerificationServiceImpl implements PostVerificationService {
         }
     }
 
-    public VerificationDto verifyDailyMission(SubmitDailyMissionDto submitDto, DailyMission assignedDailyMission, String providerId) {
+    public VerificationDto verifyDailyMission(SubmitDailyMissionDto submitDto, String missionContent,
+                                              String providerId) {
 
         if (submitDto.getContent() == null || submitDto.getContent().isEmpty()) {
             throw new PostException(PostErrorCode.CONTENT_EMPTY);
@@ -74,23 +73,13 @@ public class PostVerificationServiceImpl implements PostVerificationService {
 
         checkAndIncrementDailyVerificationCount(providerId);
 
-
         String requestContent = submitDto.getContent();
         List<MultipartFile> images = submitDto.getImageFiles();
 
-        String assignedContent = assignedDailyMission.getMission().getDescription();
-
         if (images == null || images.isEmpty()) {
-            VerificationDto result = verifyMissionTextOnly(requestContent, assignedContent);
+            VerificationDto result = verifyMissionTextOnly(requestContent, missionContent);
+
             if (!result.isTextResult()) {
-                String failureReason = result.getFailureReason();
-                log.info("실패 이유 : {}", failureReason);
-                throw new GptException(GptErrorCode.WRONG_CONTENT, failureReason);
-            }
-            return result;
-        } else {
-            VerificationDto result = verifyMissionTextAndImages(requestContent, assignedContent, images);
-            if (!result.isTextResult() || !result.isImageResult()) {
                 String failureReason = result.getFailureReason();
                 log.info("실패 이유 : {}", failureReason);
                 throw new GptException(GptErrorCode.WRONG_CONTENT, failureReason);
@@ -98,15 +87,19 @@ public class PostVerificationServiceImpl implements PostVerificationService {
             return result;
         }
 
+        VerificationDto result = verifyMissionTextAndImages(requestContent, missionContent, images);
+
+        if (!result.isTextResult() || !result.isImageResult()) {
+            String failureReason = result.getFailureReason();
+            log.info("실패 이유 : {}", failureReason);
+            throw new GptException(GptErrorCode.WRONG_CONTENT, failureReason);
+        }
+        return result;
 
     }
 
-
     @Override
     public VerificationDto verifyPost(PostCreateDto postCreateDto, String providerId) {
-        User user = userRepository.findByProviderId(providerId)
-                .orElseThrow(() -> new PostException(PostErrorCode.USER_NOT_FOUND));
-
         checkAndIncrementDailyVerificationCount(providerId);
 
         if (postCreateDto.getContent() == null || postCreateDto.getContent().isEmpty()) {
@@ -122,6 +115,7 @@ public class PostVerificationServiceImpl implements PostVerificationService {
         if (images == null || images.isEmpty()) {
             // Only text verification is needed
             VerificationDto result = verifyTextOnly(content);
+
             if (!result.isTextResult()) {
                 String failureReason = result.getFailureReason();
                 throw new GptException(GptErrorCode.WRONG_CONTENT, failureReason);
@@ -130,6 +124,7 @@ public class PostVerificationServiceImpl implements PostVerificationService {
         } else {
             // Both text and image verification is needed
             VerificationDto result = verifyTextAndImages(content, images);
+
             if (!result.isTextResult() || !result.isImageResult()) {
                 String failureReason = result.getFailureReason();
                 throw new GptException(GptErrorCode.WRONG_CONTENT, failureReason);
@@ -138,45 +133,15 @@ public class PostVerificationServiceImpl implements PostVerificationService {
         }
     }
 
-    public Verification makeVerification(VerificationDto verificationDto) {
-        if (verificationDto.isTextResult() && verificationDto.isImageResult()) {
-            Verification verification = Verification.builder()
-                    .isTextVerified(true)
-                    .isImageVerified(true)
-                    .failureReason(verificationDto.getFailureReason())
-                    .successReason(verificationDto.getSuccessReason())
-                    .build();
-            return verification;
-        } else if (verificationDto.isTextResult() && !verificationDto.isImageResult()) {
-            Verification verification = Verification.builder()
-                    .isTextVerified(true)
-                    .isImageVerified(false)
-                    .failureReason(verificationDto.getFailureReason())
-                    .successReason(verificationDto.getSuccessReason())
-                    .build();
-            return verification;
-        } else if (!verificationDto.isTextResult() && !verificationDto.isImageResult()) {
-            Verification verification = Verification.builder()
-                    .isTextVerified(false)
-                    .isImageVerified(false)
-                    .failureReason(verificationDto.getFailureReason())
-                    .successReason(verificationDto.getSuccessReason())
-                    .build();
-            return verification;
-        } else {
-            throw new GptException(GptErrorCode.GPT_LOGIC_ERROR, null);
-        }
-    }
-
-
     private VerificationDto verifyTextOnly(String content) {
         List<ChatMessage> messages = new ArrayList<>();
 
-        String systemPrompt = "You are an AI assistant tasked with verifying if the given text describes an act of kindness. " +
-                "Respond in the following format exactly:\n" +
-                "text_result: true/false\n" +
-                "success_reason: [reason for success, only if text_result is true]\n" +
-                "failure_reason: [reason for failure, only if text_result is false]";
+        String systemPrompt =
+                "You are an AI assistant tasked with verifying if the given text describes an act of kindness. " +
+                        "Respond in the following format exactly:\n" +
+                        "text_result: true/false\n" +
+                        "success_reason: [reason for success, only if text_result is true]\n" +
+                        "failure_reason: [reason for failure, only if text_result is false]";
 
         messages.add(new ChatMessage(ChatMessageRole.SYSTEM.value(), systemPrompt));
 
@@ -201,13 +166,14 @@ public class PostVerificationServiceImpl implements PostVerificationService {
         try {
             List<ChatMessage> messages = new ArrayList<>();
 
-            String systemPrompt = "You are an AI assistant tasked with verifying if the given text describes an act of kindness " +
-                    "and if the provided images properly describe the text and relate to acts of kindness. " +
-                    "Respond in the following format exactly:\n" +
-                    "text_result: true/false\n" +
-                    "image_result: true/false\n" +
-                    "success_reason: [reason for success, only if any result is true]\n" +
-                    "failure_reason: [reason for failure, only if any result is false]";
+            String systemPrompt =
+                    "You are an AI assistant tasked with verifying if the given text describes an act of kindness " +
+                            "and if the provided images properly describe the text and relate to acts of kindness. " +
+                            "Respond in the following format exactly:\n" +
+                            "text_result: true/false\n" +
+                            "image_result: true/false\n" +
+                            "success_reason: [reason for success, only if any result is true]\n" +
+                            "failure_reason: [reason for failure, only if any result is false]";
 
             messages.add(new ChatMessage(ChatMessageRole.SYSTEM.value(), systemPrompt));
 
@@ -294,7 +260,8 @@ public class PostVerificationServiceImpl implements PostVerificationService {
                         debugRequestBody = debugRequestBody.replaceAll(
                                 "(\"url\":\"data:image/jpeg;base64,)[^\"]+",
                                 "$1...[BASE64_DATA_LENGTH: " +
-                                        debugRequestBody.split("\"url\":\"data:image/jpeg;base64,")[1].split("\"")[0].length() +
+                                        debugRequestBody.split("\"url\":\"data:image/jpeg;base64,")[1].split(
+                                                "\"")[0].length() +
                                         "]..."
                         );
                     }
@@ -350,11 +317,13 @@ public class PostVerificationServiceImpl implements PostVerificationService {
     private VerificationDto verifyMissionTextOnly(String content, String missionDescription) {
         List<ChatMessage> messages = new ArrayList<>();
 
-        String systemPrompt = "You are an AI assistant tasked with verifying if the given submission is related to the assigned mission. " +
-                "Respond in the following format exactly:\n" +
-                "text_result: true/false\n" +
-                "success_reason: [reason for success, only if text_result is true]\n" +
-                "failure_reason: [reason for failure, only if text_result is false]";
+        String systemPrompt =
+                "You are an AI assistant tasked with verifying if the given submission is related to the assigned mission. "
+                        +
+                        "Respond in the following format exactly:\n" +
+                        "text_result: true/false\n" +
+                        "success_reason: [reason for success, only if text_result is true]\n" +
+                        "failure_reason: [reason for failure, only if text_result is false]";
 
         messages.add(new ChatMessage(ChatMessageRole.SYSTEM.value(), systemPrompt));
 
@@ -378,17 +347,20 @@ public class PostVerificationServiceImpl implements PostVerificationService {
         }
     }
 
-    private VerificationDto verifyMissionTextAndImages(String content, String missionDescription, List<MultipartFile> images) {
+    private VerificationDto verifyMissionTextAndImages(String content, String missionDescription,
+                                                       List<MultipartFile> images) {
         try {
             List<ChatMessage> messages = new ArrayList<>();
 
-            String systemPrompt = "You are an AI assistant tasked with verifying if the given submission (both text and images) is related to the assigned mission. " +
-                    "Consider both the textual content and visual elements when making your assessment. " +
-                    "Respond in the following format exactly:\n" +
-                    "text_result: true/false\n" +
-                    "image_result: true/false\n" +
-                    "success_reason: [reason for success, only if any result is true]\n" +
-                    "failure_reason: [reason for failure, only if any result is false]";
+            String systemPrompt =
+                    "You are an AI assistant tasked with verifying if the given submission (both text and images) is related to the assigned mission. "
+                            +
+                            "Consider both the textual content and visual elements when making your assessment. " +
+                            "Respond in the following format exactly:\n" +
+                            "text_result: true/false\n" +
+                            "image_result: true/false\n" +
+                            "success_reason: [reason for success, only if any result is true]\n" +
+                            "failure_reason: [reason for failure, only if any result is false]";
 
             messages.add(new ChatMessage(ChatMessageRole.SYSTEM.value(), systemPrompt));
 
@@ -477,7 +449,8 @@ public class PostVerificationServiceImpl implements PostVerificationService {
                         debugRequestBody = debugRequestBody.replaceAll(
                                 "(\"url\":\"data:image/jpeg;base64,)[^\"]+",
                                 "$1...[BASE64_DATA_LENGTH: " +
-                                        debugRequestBody.split("\"url\":\"data:image/jpeg;base64,")[1].split("\"")[0].length() +
+                                        debugRequestBody.split("\"url\":\"data:image/jpeg;base64,")[1].split(
+                                                "\"")[0].length() +
                                         "]..."
                         );
                     }

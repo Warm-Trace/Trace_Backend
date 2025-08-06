@@ -14,21 +14,19 @@ import com.example.trace.mission.repository.DailyMissionRepository;
 import com.example.trace.mission.repository.MissionRepository;
 import com.example.trace.mission.util.MissionDateUtil;
 import com.example.trace.notification.service.NotificationEventService;
-import com.example.trace.post.domain.PostType;
 import com.example.trace.post.dto.post.PostCreateDto;
 import com.example.trace.post.dto.post.PostDto;
 import com.example.trace.post.service.PostService;
 import com.example.trace.user.User;
 import com.example.trace.user.UserService;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +44,24 @@ public class DailyMissionService {
     private static final int MAX_CHANGES_PER_DAY = 10;
     private static final int DEFAULT_PAGE_SIZE = 20;
 
+
+    @Transactional
+    public PostDto handleSubmittedMission(SubmitDailyMissionDto dailyMissionDto, String userProviderId) {
+        User user = userService.getUser(userProviderId);
+        LocalDate missionDate = MissionDateUtil.getMissionDate();
+        DailyMission dailyMission = dailyMissionRepository.findByUserAndCreatedAt(user, missionDate)
+                .orElseThrow(() -> new MissionException(MissionErrorCode.DAILYMISSION_NOT_FOUND));
+
+        String description = dailyMission.getMission().getDescription();
+        VerificationDto verificationDto =
+                postVerificationService.verifyDailyMission(dailyMissionDto, description, userProviderId);
+
+        PostCreateDto postCreateDto = PostCreateDto.createForMission(dailyMissionDto, description);
+        PostDto postDto = postService.createPost(postCreateDto, userProviderId, verificationDto);
+
+        complete(dailyMission, postDto.getId());
+        return postDto;
+    }
 
     @Scheduled(cron = "0 0 7 * * *")
     public void assignDailyMissionsToAllUsers() {
@@ -136,35 +152,6 @@ public class DailyMissionService {
         return DailyMissionResponse.fromEntity(dailyMission);
     }
 
-    public PostDto verifySubmissionAndCreatePost(String providerId, SubmitDailyMissionDto submitDto) {
-        User user = userService.getUser(providerId);
-
-        LocalDate missionDate = MissionDateUtil.getMissionDate();
-        DailyMission assignedDailyMission = dailyMissionRepository.findByUserAndCreatedAt(user, missionDate)
-                .orElseThrow(() -> new MissionException(MissionErrorCode.DAILYMISSION_NOT_FOUND));
-
-        VerificationDto verificationDto = postVerificationService.verifyDailyMission(submitDto, assignedDailyMission, providerId);
-        if (!verificationDto.isImageResult() && !verificationDto.isTextResult()) {
-            throw new MissionException(MissionErrorCode.VERIFICATION_FAIL);
-        }
-
-        PostCreateDto postCreateDto = PostCreateDto.builder()
-                .postType(PostType.MISSION)
-                .title(submitDto.getTitle())
-                .content(submitDto.getContent())
-                .imageFiles(submitDto.getImageFiles())
-                .missionContent(assignedDailyMission.getMission().getDescription())
-                .build();
-
-        PostDto postDto = postService.createPost(postCreateDto, providerId, verificationDto);
-
-        // 미션 완료 처리
-        assignedDailyMission.updateVerification(true, postDto.getId());
-        dailyMissionRepository.save(assignedDailyMission);
-
-        return postDto;
-    }
-
     public CursorResponse<DailyMissionResponse> getCompletedMissions(User user, MissionCursorRequest request) {
         Integer size = request.getSize() != null ? request.getSize() : DEFAULT_PAGE_SIZE;
 
@@ -197,6 +184,11 @@ public class DailyMissionService {
                 .hasNext(hasNext)
                 .cursor(nextCursor)
                 .build();
+    }
+
+    private void complete(DailyMission assignedDailyMission, Long postId) {
+        assignedDailyMission.updateVerification(true, postId);
+        dailyMissionRepository.save(assignedDailyMission);
     }
 }
 
