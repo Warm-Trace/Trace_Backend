@@ -28,6 +28,9 @@ public enum BirdLevel {
     }
 
     public static BirdLevel fromLevel(int level) {
+        if (level < 0 || level >= values().length) {
+            throw new IllegalArgumentException("유효하지 않은 레벨: " + level);
+        }
         return Arrays.stream(values())
                 .filter(birdLevel -> birdLevel.level == level)
                 .findFirst()
