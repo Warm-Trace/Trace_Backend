@@ -12,13 +12,15 @@ import com.example.trace.auth.models.OIDCPublicKey;
 import com.example.trace.auth.models.OIDCPublicKeyResponse;
 import com.example.trace.auth.provider.KakaoOIDCProvider;
 import com.example.trace.auth.repository.UserRepository;
+import com.example.trace.bird.Bird;
+import com.example.trace.bird.BirdLevel;
+import com.example.trace.bird.BirdRepository;
 import com.example.trace.file.FileType;
 import com.example.trace.file.S3UploadService;
 import com.example.trace.global.errorcode.AuthErrorCode;
 import com.example.trace.global.errorcode.SignUpErrorCode;
 import com.example.trace.global.exception.AuthException;
 import com.example.trace.global.exception.SignUpException;
-import com.example.trace.global.fcm.FcmTokenService;
 import com.example.trace.mission.mission.DailyMission;
 import com.example.trace.mission.mission.Mission;
 import com.example.trace.mission.repository.DailyMissionRepository;
@@ -26,10 +28,6 @@ import com.example.trace.mission.repository.MissionRepository;
 import com.example.trace.notification.service.NotificationEventService;
 import com.example.trace.user.Role;
 import com.example.trace.user.User;
-import java.time.LocalDate;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +36,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +54,7 @@ public class KakaoOAuthService {
     private final RedisTemplate<String, String> redisTemplate;
     private final JwtUtil jwtUtil;
     private final S3UploadService s3UploadService;
-    private final FcmTokenService fcmTokenService;
+    private final BirdRepository birdRepository;
     private final NotificationEventService notificationEventService;
 
     @Value("${oauth2.client.registration.kakao.client-id}")
@@ -152,6 +155,14 @@ public class KakaoOAuthService {
             dailyMissionRepository.save(signUpDailyMission);
 
             notificationEventService.sendDailyMissionAssignedNotification(newUser, randomMission);
+
+            Bird bird = Bird.builder()
+                    .user(newUser)
+                    .birdLevel(BirdLevel.EGG)
+                    .isSelected(true)
+                    .build();
+
+            birdRepository.save(bird);
 
             // 4. Generate JWT tokens for your app
             String accessToken = generateAccessToken(newUser);

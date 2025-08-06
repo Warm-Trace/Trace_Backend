@@ -1,6 +1,7 @@
 package com.example.trace.post.service;
 
 import com.example.trace.auth.repository.UserRepository;
+import com.example.trace.bird.BirdService;
 import com.example.trace.emotion.EmotionService;
 import com.example.trace.emotion.EmotionType;
 import com.example.trace.emotion.dto.EmotionCountDto;
@@ -50,6 +51,7 @@ public class PostServiceImpl implements PostService {
     private final PostVerificationService postVerificationService;
     private final EmotionService emotionService;
     private final PostImageRepository postImageRepository;
+    private final BirdService birdService;
 
     @Override
     @Transactional
@@ -59,6 +61,8 @@ public class PostServiceImpl implements PostService {
         PostType postType = postCreateDto.getPostType();
 
         if (verificationDto != null) {
+            user.updateVerification(verificationDto, postType);
+            birdService.checkAndUnlockBirdLevel(user);
             user.updateVerification(verificationDto, postType);
         }
 

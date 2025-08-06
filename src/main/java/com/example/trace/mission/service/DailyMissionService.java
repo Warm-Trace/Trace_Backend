@@ -1,5 +1,6 @@
 package com.example.trace.mission.service;
 
+import com.example.trace.bird.BirdService;
 import com.example.trace.global.errorcode.MissionErrorCode;
 import com.example.trace.global.exception.MissionException;
 import com.example.trace.global.response.CursorResponse;
@@ -40,6 +41,7 @@ public class DailyMissionService {
     private final PostVerificationService postVerificationService;
     private final PostService postService;
     private final NotificationEventService notificationEventService;
+    private final BirdService birdService;
 
     private static final int MAX_CHANGES_PER_DAY = 10;
     private static final int DEFAULT_PAGE_SIZE = 20;
@@ -151,6 +153,7 @@ public class DailyMissionService {
 
         return DailyMissionResponse.fromEntity(dailyMission);
     }
+
 
     public CursorResponse<DailyMissionResponse> getCompletedMissions(User user, MissionCursorRequest request) {
         Integer size = request.getSize() != null ? request.getSize() : DEFAULT_PAGE_SIZE;

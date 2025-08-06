@@ -2,6 +2,8 @@ package com.example.trace.user;
 
 import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.notification.domain.NotificationEvent;
+
+import jakarta.persistence.*;
 import com.example.trace.post.domain.PostType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,10 +16,14 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -48,6 +54,9 @@ public class User {
     @Builder.Default
     private Long verificationCount = 0L;
 
+    @Builder.Default
+    private Long completedMissionCount = 0L;
+
     //spring security용으로 일단 두기.
     private String password;
 
@@ -75,6 +84,10 @@ public class User {
 
     public void updateVerification(VerificationDto verificationDto, PostType type) {
         this.verificationScore += type.getTotalScore(verificationDto);
+    }
+
+    public void updateCompletedMissionCount() {
+        this.completedMissionCount++;
     }
 
     public boolean addNotification(NotificationEvent notificationEvent) {
