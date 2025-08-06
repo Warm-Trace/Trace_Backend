@@ -12,12 +12,13 @@ import com.example.trace.global.response.CursorResponse;
 import com.example.trace.gpt.domain.Verification;
 import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.gpt.service.PostVerificationService;
-import com.example.trace.mission.repository.DailyMissionRepository;
 import com.example.trace.post.domain.Post;
 import com.example.trace.post.domain.PostImage;
 import com.example.trace.post.domain.PostType;
 import com.example.trace.post.domain.cursor.SearchType;
-import com.example.trace.post.dto.cursor.PostCursorRequest;
+import com.example.trace.post.dto.cursor.MyPagePostRequest;
+import com.example.trace.post.dto.cursor.PostFeedRequest;
+import com.example.trace.post.dto.cursor.PostSearchRequest;
 import com.example.trace.post.dto.post.PostCreateDto;
 import com.example.trace.post.dto.post.PostDto;
 import com.example.trace.post.dto.post.PostFeedDto;
@@ -25,14 +26,15 @@ import com.example.trace.post.dto.post.PostUpdateDto;
 import com.example.trace.post.repository.PostImageRepository;
 import com.example.trace.post.repository.PostRepository;
 import com.example.trace.user.User;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -47,26 +49,7 @@ public class PostServiceImpl implements PostService {
     private final S3UploadService s3UploadService;
     private final PostVerificationService postVerificationService;
     private final EmotionService emotionService;
-    private final DailyMissionRepository dailyMissionRepository;
     private final PostImageRepository postImageRepository;
-
-    @Override
-    @Transactional
-    public PostDto createPost(PostCreateDto postCreateDto, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new PostException(PostErrorCode.USER_NOT_FOUND));
-
-        Post post = Post.builder()
-                .postType(postCreateDto.getPostType())
-                .title(postCreateDto.getTitle())
-                .content(postCreateDto.getContent())
-                .user(user)
-                .build();
-
-        Post savedPost = postRepository.save(post);
-        return PostDto.fromEntity(savedPost);
-    }
-
 
     @Override
     @Transactional
@@ -156,7 +139,7 @@ public class PostServiceImpl implements PostService {
 
 
     @Transactional(readOnly = true)
-    public CursorResponse<PostFeedDto> getAllPostsWithCursor(PostCursorRequest request, String providerId) {
+    public CursorResponse<PostFeedDto> getAllPostsWithCursor(PostFeedRequest request, String providerId) {
         // 커서 요청 처리
         int size = request.getSize() != null ? request.getSize() : 10;
 
@@ -198,7 +181,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
-    public CursorResponse<PostFeedDto> searchPostsWithCursor(PostCursorRequest request, String providerId) {
+    public CursorResponse<PostFeedDto> searchPostsWithCursor(PostSearchRequest request, String providerId) {
         int size = request.getSize() != null ? request.getSize() : 10;
 
         // 검색어가 있는 경우 검색 메서드 사용, 없으면 기존 메서드 사용
@@ -318,134 +301,9 @@ public class PostServiceImpl implements PostService {
         }
     }
 
-    @Transactional(readOnly = true)
-    public CursorResponse<PostFeedDto> getUserCommentedPostsWithCursor(PostCursorRequest request, String providerId) {
-        // 커서 요청 처리
-        int size = request.getSize() != null ? request.getSize() : 10;
-
-        // 게시글 조회
-        List<PostFeedDto> posts;
-        if (request.getCursorDateTime() == null || request.getCursorId() == null) {
-            // 첫 페이지 조회
-            posts = postRepository.findUserCommentedPosts(providerId, null, null, size + 1);
-        } else {
-            // 다음 페이지 조회
-            posts = postRepository.findUserCommentedPosts(
-                    providerId, request.getCursorDateTime(), request.getCursorId(), size + 1);
-        }
-
-        // 다음 페이지 여부 확인
-        boolean hasNext = false;
-        if (posts.size() > size) {
-            hasNext = true;
-            posts = posts.subList(0, size);
-        }
-
-        // 커서 메타데이터 생성
-        CursorResponse.CursorMeta nextCursor = null;
-        if (!posts.isEmpty() && hasNext) {
-            PostFeedDto lastPost = posts.get(posts.size() - 1);
-            nextCursor = CursorResponse.CursorMeta.builder()
-                    .dateTime(lastPost.getCreatedAt())
-                    .id(lastPost.getPostId())
-                    .build();
-        }
-
-        // 응답 생성
-        return CursorResponse.<PostFeedDto>builder()
-                .content(posts)
-                .hasNext(hasNext)
-                .cursor(nextCursor)
-                .build();
-    }
-
     @Override
     @Transactional(readOnly = true)
-    public CursorResponse<PostFeedDto> getMyPostsWithCursor(PostCursorRequest request, String providerId) {
-        // 커서 요청 처리
-        int size = request.getSize() != null ? request.getSize() : 10;
-
-        // 게시글 조회
-        List<PostFeedDto> posts;
-        if (request.getCursorDateTime() == null || request.getCursorId() == null) {
-            // 첫 페이지 조회
-            posts = postRepository.findUserPosts(providerId, null, null, size + 1);
-        } else {
-            // 다음 페이지 조회
-            posts = postRepository.findUserPosts(
-                    providerId, request.getCursorDateTime(), request.getCursorId(), size + 1);
-        }
-
-        // 다음 페이지 여부 확인
-        boolean hasNext = false;
-        if (posts.size() > size) {
-            hasNext = true;
-            posts = posts.subList(0, size);
-        }
-
-        // 커서 메타데이터 생성
-        CursorResponse.CursorMeta nextCursor = null;
-        if (!posts.isEmpty() && hasNext) {
-            PostFeedDto lastPost = posts.get(posts.size() - 1);
-            nextCursor = CursorResponse.CursorMeta.builder()
-                    .dateTime(lastPost.getCreatedAt())
-                    .id(lastPost.getPostId())
-                    .build();
-        }
-
-        // 응답 생성
-        return CursorResponse.<PostFeedDto>builder()
-                .content(posts)
-                .hasNext(hasNext)
-                .cursor(nextCursor)
-                .build();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public CursorResponse<PostFeedDto> getUserEmotedPostsWithCursor(PostCursorRequest request, String providerId) {
-        // 커서 요청 처리
-        int size = request.getSize() != null ? request.getSize() : 10;
-
-        // 게시글 조회
-        List<PostFeedDto> posts;
-        if (request.getCursorDateTime() == null || request.getCursorId() == null) {
-            // 첫 페이지 조회
-            posts = postRepository.findUserEmotedPosts(providerId, null, null, size + 1);
-        } else {
-            // 다음 페이지 조회
-            posts = postRepository.findUserEmotedPosts(
-                    providerId, request.getCursorDateTime(), request.getCursorId(), size + 1);
-        }
-
-        // 다음 페이지 여부 확인
-        boolean hasNext = false;
-        if (posts.size() > size) {
-            hasNext = true;
-            posts = posts.subList(0, size);
-        }
-
-        // 커서 메타데이터 생성
-        CursorResponse.CursorMeta nextCursor = null;
-        if (!posts.isEmpty() && hasNext) {
-            PostFeedDto lastPost = posts.get(posts.size() - 1);
-            nextCursor = CursorResponse.CursorMeta.builder()
-                    .dateTime(lastPost.getCreatedAt())
-                    .id(lastPost.getPostId())
-                    .build();
-        }
-
-        // 응답 생성
-        return CursorResponse.<PostFeedDto>builder()
-                .content(posts)
-                .hasNext(hasNext)
-                .cursor(nextCursor)
-                .build();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public CursorResponse<PostFeedDto> getMyPagePostsWithCursor(PostCursorRequest request, String providerId) {
+    public CursorResponse<PostFeedDto> getMyPagePostsWithCursor(MyPagePostRequest request, String providerId) {
         int size = request.getSize() != null ? request.getSize() : 10;
         List<PostFeedDto> posts;
 
