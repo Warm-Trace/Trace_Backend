@@ -1,9 +1,17 @@
 package com.example.trace.notification.domain;
 
+import static com.example.trace.global.errorcode.NotificationErrorCode.DATA_DESERIALIZATION_FAILED;
+import static com.example.trace.global.errorcode.NotificationErrorCode.DATA_SERIALIZATION_FAILED;
+import static com.example.trace.global.errorcode.NotificationErrorCode.IDENTIFIER_NOT_FOUND;
+import static com.example.trace.global.errorcode.NotificationErrorCode.TIMESTAMP_NOT_FOUND;
+
 import com.example.trace.emotion.EmotionType;
+import com.example.trace.global.exception.NotificationException;
 import com.example.trace.user.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -11,21 +19,23 @@ import jakarta.persistence.Converter;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
+@Slf4j
 @Entity
 @Getter
 @Builder
@@ -33,8 +43,8 @@ import org.jetbrains.annotations.NotNull;
 @NoArgsConstructor
 public class NotificationEvent implements Comparable<NotificationEvent> {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(columnDefinition = "BINARY(16)")
+    private UUID id;
 
     // 관련 리소스 id
     private Long refId;
@@ -50,7 +60,8 @@ public class NotificationEvent implements Comparable<NotificationEvent> {
     @Convert(converter = NotificationDataConverter.class)
     private NotificationData data;
 
-    private Long createdAt;
+    @Column(name = "created_at", columnDefinition = "DATETIME(6)")
+    private LocalDateTime createdAt;
 
     @Builder.Default
     private Boolean isRead = false;
@@ -113,20 +124,30 @@ public class NotificationEvent implements Comparable<NotificationEvent> {
      * Notification의 data 필으데 직렬화되어 저장될 구조체
      */
     @Getter
-    @Setter
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
+    @ToString
     public static class NotificationData {
-        private String title;
-        private String body;
+        private UUID id;
         private SourceType type;
         private Long postId;
         private EmotionType emotion;
-        private String timestamp;
+        private String title;
+        private String body;
+        private LocalDateTime timestamp;
 
         public Map<String, String> toMap() {
+            if (id == null) {
+                throw new NotificationException(IDENTIFIER_NOT_FOUND);
+            }
+            if (timestamp == null) {
+                throw new NotificationException(TIMESTAMP_NOT_FOUND);
+            }
             Map<String, String> map = new HashMap<>();
+            map.put("id", id.toString());
+            map.put("timestamp", timestamp.toString());
+
             if (title != null) {
                 map.put("title", title);
             }
@@ -142,9 +163,6 @@ public class NotificationEvent implements Comparable<NotificationEvent> {
             if (emotion != null) {
                 map.put("emotion", emotion.name());
             }
-            if (timestamp != null) {
-                map.put("timestamp", timestamp);
-            }
             return map;
         }
     }
@@ -152,7 +170,9 @@ public class NotificationEvent implements Comparable<NotificationEvent> {
     @Converter
     public static class NotificationDataConverter implements AttributeConverter<NotificationData, String> {
 
-        private static final ObjectMapper objectMapper = new ObjectMapper();
+        private static final ObjectMapper objectMapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         @Override
         public String convertToDatabaseColumn(NotificationData attribute) {
@@ -162,7 +182,8 @@ public class NotificationEvent implements Comparable<NotificationEvent> {
             try {
                 return objectMapper.writeValueAsString(attribute);
             } catch (JsonProcessingException e) {
-                throw new IllegalArgumentException("NotificationData 직렬화 실패", e);
+                log.error("직렬화 실패 {}", attribute, e);
+                throw new NotificationException(DATA_SERIALIZATION_FAILED);
             }
         }
 
@@ -174,7 +195,7 @@ public class NotificationEvent implements Comparable<NotificationEvent> {
             try {
                 return objectMapper.readValue(dbData, NotificationData.class);
             } catch (Exception e) {
-                throw new IllegalArgumentException("NotificationData 역직렬화 실패", e);
+                throw new NotificationException(DATA_DESERIALIZATION_FAILED);
             }
         }
     }

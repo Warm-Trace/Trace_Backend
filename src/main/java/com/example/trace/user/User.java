@@ -2,7 +2,21 @@ package com.example.trace.user;
 
 import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.notification.domain.NotificationEvent;
+
 import jakarta.persistence.*;
+import com.example.trace.post.domain.PostType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -52,7 +66,7 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
-    @OneToMany(mappedBy = "user", orphanRemoval = true)
+    @OneToMany(mappedBy = "user")
     @Builder.Default
     private List<NotificationEvent> notificationEvents = new ArrayList<>();
 
@@ -64,16 +78,12 @@ public class User {
         this.profileImageUrl = newProfileImageUrl;
     }
 
-    public void updateVerification(VerificationDto verificationDto) {
-        if (verificationDto.isTextResult() || verificationDto.isImageResult()) {
-            verificationCount++;
-        }
-        if (verificationDto.isImageResult()) {
-            this.verificationScore += 10;
-        }
-        if (verificationDto.isTextResult()) {
-            this.verificationScore += 5;
-        }
+    public void tryVerification() {
+        verificationCount++;
+    }
+
+    public void updateVerification(VerificationDto verificationDto, PostType type) {
+        this.verificationScore += type.getTotalScore(verificationDto);
     }
 
     public void updateCompletedMissionCount() {

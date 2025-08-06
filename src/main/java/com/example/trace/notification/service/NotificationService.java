@@ -7,17 +7,15 @@ import static com.example.trace.global.errorcode.UserErrorCode.USER_NOT_FOUND;
 import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.global.exception.NotificationException;
 import com.example.trace.global.exception.UserException;
-import com.example.trace.global.response.CursorResponse;
-import com.example.trace.global.response.CursorResponse.CursorMeta;
 import com.example.trace.notification.domain.NotificationEvent;
-import com.example.trace.notification.dto.NotificationCursorRequest;
+import com.example.trace.notification.dto.CursorNotificationResponse;
+import com.example.trace.notification.dto.CursorNotificationResponse.CursorMeta;
 import com.example.trace.notification.dto.NotificationResponse;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.user.User;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -32,18 +30,21 @@ public class NotificationService {
     private final NotificationEventRepository notificationEventRepository;
 
     @Transactional(readOnly = true)
-    public CursorResponse<NotificationResponse> getNotifications(NotificationCursorRequest request, User user) {
-        int pageSize = request.getSize();
+    public CursorNotificationResponse<NotificationResponse> getNotifications(
+            Integer pageSize,
+            UUID cursorId,
+            LocalDateTime cursorDateTime,
+            User user) {
         List<NotificationEvent> notifications;
 
-        if (request.getCursorDateTime() == null || request.getCursorId() == null) {
+        if (cursorDateTime == null || cursorId == null) {
             // 첫 번째 요청인 경우
             notifications = notificationEventRepository.findFirstPage(user,
                     PageRequest.of(0, pageSize, Sort.by("createdAt").descending().and(Sort.by("id").descending())));
         } else {
             // 두 번째 이후 요청
-            notifications = notificationEventRepository.findNextPage(user, request.getCursorDateTime(),
-                    request.getCursorId(),
+            notifications = notificationEventRepository.findNextPage(user, cursorDateTime,
+                    cursorId,
                     PageRequest.of(0, pageSize, Sort.by("createdAt").descending().and(Sort.by("id").descending())));
         }
 
@@ -51,13 +52,13 @@ public class NotificationService {
 
         boolean hasNext = results.size() == pageSize;
         NotificationResponse last = results.get(results.size() - 1);
-        CursorResponse.CursorMeta nextCursor = getNextCursorFrom(last, hasNext);
+        CursorNotificationResponse.CursorMeta nextCursor = getNextCursorFrom(last, hasNext);
 
-        return new CursorResponse<>(results, hasNext, nextCursor);
+        return new CursorNotificationResponse<>(results, hasNext, nextCursor);
     }
 
     @Transactional
-    public NotificationEvent read(Long id, String userProviderId) {
+    public NotificationEvent read(UUID id, String userProviderId) {
         NotificationEvent notificationEvent = notificationEventRepository.findById(id)
                 .orElseThrow(() -> new NotificationException(NOTIFICATION_NOT_FOUND));
         User user = userRepository.findByProviderId(userProviderId)
@@ -74,7 +75,7 @@ public class NotificationService {
     }
 
     @Transactional
-    public void delete(Long notificationId, String userProviderId) {
+    public void delete(UUID notificationId, String userProviderId) {
         NotificationEvent notification = notificationEventRepository.findById(notificationId)
                 .orElseThrow(() -> new NotificationException(NOTIFICATION_NOT_FOUND));
 
@@ -84,19 +85,16 @@ public class NotificationService {
 
         User user = notification.getUser();
         user.getNotificationEvents().remove(notification);
+        notificationEventRepository.delete(notification);
     }
 
-    private CursorResponse.CursorMeta getNextCursorFrom(NotificationResponse last, boolean hasNext) {
+    private CursorNotificationResponse.CursorMeta getNextCursorFrom(NotificationResponse last, boolean hasNext) {
         if (!hasNext) {
             return null;
         }
 
-        LocalDateTime createdAt = Instant.ofEpochMilli(last.getCreatedAt())
-                .atZone(ZoneId.of("Asia/Seoul"))
-                .toLocalDateTime();
-
         return CursorMeta.builder()
-                .dateTime(createdAt)
+                .dateTime(last.getCreatedAt())
                 .id(last.getId())
                 .build();
     }
