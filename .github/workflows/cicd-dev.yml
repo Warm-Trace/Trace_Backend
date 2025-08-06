@@ -2,7 +2,7 @@ name: CI/CD for Development Server
 
 on:
   push:
-    branches: [ develop ]
+    branches: [  ]
 
 jobs:
   build:
