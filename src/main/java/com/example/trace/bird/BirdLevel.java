@@ -2,6 +2,9 @@ package com.example.trace.bird;
 
 import lombok.Getter;
 
+import java.util.Arrays;
+import java.util.NoSuchElementException;
+
 @Getter
 public enum BirdLevel {
     EGG(0, "알", 0, 0),
@@ -22,5 +25,12 @@ public enum BirdLevel {
         this.name = name;
         this.requiredGoodDeedCount = requiredGoodDeedCount;
         this.requiredMissionCount = requiredMissionCount;
+    }
+
+    public static BirdLevel fromLevel(int level) {
+        return Arrays.stream(values())
+                .filter(birdLevel -> birdLevel.level == level)
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("레벨 " + level + "인 제비가 존재하지 않습니다."));
     }
 }
