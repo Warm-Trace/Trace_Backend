@@ -10,10 +10,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
 
 @Entity
 @Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Point {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,6 +28,7 @@ public class Point {
 
     private Integer value;
 
+    @CreatedDate
     private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
@@ -29,4 +37,12 @@ public class Point {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    public static Point of(PointSource source, User user) {
+        return Point.builder()
+                .source(source)
+                .value(source.getPoints())
+                .user(user)
+                .build();
+    }
 }

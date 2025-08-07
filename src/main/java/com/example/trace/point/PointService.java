@@ -17,6 +17,12 @@ public class PointService {
 
     private final PointRepository pointRepository;
 
+    @Transactional
+    public void save(PointSource pointSource, User user) {
+        Point point = Point.of(pointSource, user);
+        pointRepository.save(point);
+    }
+
     @Transactional(readOnly = true)
     public CursorResponse<PointResponse> getPage(Integer size, Long id, LocalDateTime dateTime, User user) {
         List<Point> points;
