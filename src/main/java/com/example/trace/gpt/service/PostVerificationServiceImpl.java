@@ -13,15 +13,6 @@ import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.completion.chat.ChatMessageRole;
 import com.theokanning.openai.service.OpenAiService;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +23,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -89,7 +86,7 @@ public class PostVerificationServiceImpl implements PostVerificationService {
 
         VerificationDto result = verifyMissionTextAndImages(requestContent, missionContent, images);
 
-        if (!result.isTextResult() || !result.isImageResult()) {
+        if (!result.isTextResult() && !result.isImageResult()) {
             String failureReason = result.getFailureReason();
             log.info("실패 이유 : {}", failureReason);
             throw new GptException(GptErrorCode.WRONG_CONTENT, failureReason);
@@ -125,7 +122,7 @@ public class PostVerificationServiceImpl implements PostVerificationService {
             // Both text and image verification is needed
             VerificationDto result = verifyTextAndImages(content, images);
 
-            if (!result.isTextResult() || !result.isImageResult()) {
+            if (!result.isTextResult() && !result.isImageResult()) {
                 String failureReason = result.getFailureReason();
                 throw new GptException(GptErrorCode.WRONG_CONTENT, failureReason);
             }
