@@ -76,11 +76,12 @@ public class BirdService {
         birdRepository.save(newBird);
     }
 
-    public void checkAndUnlockBirdLevel(User user) {
+    public Optional<BirdLevel> checkAndUnlockBirdLevel(User user) {
         Optional<BirdLevel> unlockableBirdLevel = findUnlockableBird(user);
         if (unlockableBirdLevel.isPresent()) {
             unlockBird(user, unlockableBirdLevel.get());
         }
+        return unlockableBirdLevel;
     }
 
 }

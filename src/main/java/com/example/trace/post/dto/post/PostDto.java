@@ -1,5 +1,6 @@
 package com.example.trace.post.dto.post;
 
+import com.example.trace.bird.BirdLevel;
 import com.example.trace.emotion.EmotionType;
 import com.example.trace.emotion.dto.EmotionCountDto;
 import com.example.trace.post.domain.Post;
@@ -72,14 +73,21 @@ public class PostDto {
 
     @Schema(description = "미션 게시글일 때 보낼 content", example = "부모님 심부름에 다녀왔습니다.")
     private String missionContent;
-    
+
+    @Schema(description = "레벨업 여부", example = "false")
+    private boolean isLevelUp;
+
+    @Schema(description = "새로운 레벨", example = "BABY_BIRD")
+    private BirdLevel birdLevel;
+
+
     public static PostDto fromEntity(Post post) {
-        List<String> imageUrls = post.getImages() != null ? 
+        List<String> imageUrls = post.getImages() != null ?
                 post.getImages().stream()
-                .map(PostImage::getImageUrl)
-                .collect(Collectors.toList()) : 
+                        .map(PostImage::getImageUrl)
+                        .collect(Collectors.toList()) :
                 new ArrayList<>();
-                
+
         return PostDto.builder()
                 .id(post.getId())
                 .postType(post.getPostType())
@@ -109,10 +117,12 @@ public class PostDto {
                 .missionContent(post.getPostType() == PostType.MISSION ? post.getMissionContent() : null)
                 .build();
     }
-    
 
-    
+    public PostDto addLevelUpInfo(BirdLevel birdLevel, boolean isLevelUp) {
+        this.birdLevel = birdLevel;
+        this.isLevelUp = isLevelUp;
+        return this;
+    }
 
-    
 
 } 
