@@ -63,7 +63,6 @@ public class PostServiceImpl implements PostService {
         if (verificationDto != null) {
             user.updateVerification(verificationDto, postType);
             birdService.checkAndUnlockBirdLevel(user);
-            user.updateVerification(verificationDto, postType);
         }
 
         if (postCreateDto.getContent() == null || postCreateDto.getContent().isEmpty()) {

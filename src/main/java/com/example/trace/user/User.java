@@ -2,21 +2,8 @@ package com.example.trace.user;
 
 import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.notification.domain.NotificationEvent;
-
-import jakarta.persistence.*;
 import com.example.trace.post.domain.PostType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import java.util.ArrayList;
-import java.util.List;
-
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -52,7 +39,7 @@ public class User {
     private Long verificationScore = 0L;
 
     @Builder.Default
-    private Long verificationCount = 0L;
+    private Long verifiedPostCount = 0L;
 
     @Builder.Default
     private Long completedMissionCount = 0L;
@@ -78,16 +65,15 @@ public class User {
         this.profileImageUrl = newProfileImageUrl;
     }
 
-    public void tryVerification() {
-        verificationCount++;
-    }
-
     public void updateVerification(VerificationDto verificationDto, PostType type) {
         this.verificationScore += type.getTotalScore(verificationDto);
-    }
-
-    public void updateCompletedMissionCount() {
-        this.completedMissionCount++;
+        if (verificationDto.isTextResult() || verificationDto.isImageResult()) {
+            if (type == PostType.GOOD_DEED) {
+                this.verifiedPostCount++;
+            } else if (type == PostType.MISSION) {
+                this.completedMissionCount++;
+            }
+        }
     }
 
     public boolean addNotification(NotificationEvent notificationEvent) {
