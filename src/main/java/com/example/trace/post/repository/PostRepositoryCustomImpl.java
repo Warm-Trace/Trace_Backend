@@ -252,6 +252,14 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
     ) {
         QPost post = QPost.post;
         QComment comment = QComment.comment;
+        QComment child = new QComment("child");
+
+        BooleanExpression hasActiveChild =
+                JPAExpressions.selectOne()
+                        .from(child)
+                        .where(child.parent.id.eq(comment.id)
+                                .and(child.isDeleted.eq(false)))
+                        .exists();
 
         List<Long> parentCommentIds = queryFactory
                 .select(comment.id)
@@ -260,7 +268,8 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
                         comment.post.id.eq(postId),
                         comment.parent.isNull(), // 부모 댓글만
                         commentCursorCondition(cursorDateTime, cursorId),
-                        commentUserNotBlocked(providerId) // 댓글 작성자가 차단되지 않은 경우
+                        commentUserNotBlocked(providerId), // 댓글 작성자가 차단되지 않은 경우
+                        comment.isDeleted.eq(false).or(hasActiveChild) // 삭제되지 않았거나 삭제되지 않은 자식 댓글이 있는 경우
                 )
                 .orderBy(comment.createdAt.asc(), comment.id.asc())
                 .limit(size)
@@ -298,13 +307,13 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
                 .from(comment)
                 .leftJoin(comment.user)
                 .where(
-                        comment.id.in(parentCommentIds).or(comment.parent.id.in(parentCommentIds)),
+                        comment.id.in(parentCommentIds).
+                                or(comment.parent.id.in(parentCommentIds).and(comment.isDeleted.eq(false))),
                         commentUserNotBlocked(providerId)
                 )
                 .orderBy(comment.parent.id.asc().nullsFirst(),
                         comment.createdAt.asc())
                 .fetch();
-
 
         return allComments;
     }
