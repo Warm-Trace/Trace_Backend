@@ -43,7 +43,7 @@ public class BirdService {
     }
 
     public Optional<BirdLevel> findUnlockableBird(User user) {
-        long verificationCount = user.getVerificationCount();
+        long verifiedPostCount = user.getVerifiedPostCount();
         long completedMissionCount = user.getCompletedMissionCount();
 
         BirdLevel highestOwnedBirdLevel = getHighestOwnedBirdLevel(user);
@@ -54,7 +54,7 @@ public class BirdService {
 
         BirdLevel nextBirdLevel = BirdLevel.fromLevel(highestOwnedBirdLevel.getLevel() + 1);
 
-        if (verificationCount >= nextBirdLevel.getRequiredGoodDeedCount() &&
+        if (verifiedPostCount >= nextBirdLevel.getRequiredVerifiedPostCount() &&
                 completedMissionCount >= nextBirdLevel.getRequiredMissionCount()) {
             return Optional.of(nextBirdLevel);
         }
@@ -76,11 +76,12 @@ public class BirdService {
         birdRepository.save(newBird);
     }
 
-    public void checkAndUnlockBirdLevel(User user) {
+    public Optional<BirdLevel> checkAndUnlockBirdLevel(User user) {
         Optional<BirdLevel> unlockableBirdLevel = findUnlockableBird(user);
         if (unlockableBirdLevel.isPresent()) {
             unlockBird(user, unlockableBirdLevel.get());
         }
+        return unlockableBirdLevel;
     }
 
 }

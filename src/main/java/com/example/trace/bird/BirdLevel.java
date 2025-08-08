@@ -17,13 +17,13 @@ public enum BirdLevel {
 
     private final int level;
     private final String name;
-    private final int requiredGoodDeedCount;
+    private final int requiredVerifiedPostCount;
     private final int requiredMissionCount;
 
-    BirdLevel(int level, String name, int requiredGoodDeedCount, int requiredMissionCount) {
+    BirdLevel(int level, String name, int requiredVerifiedPostCount, int requiredMissionCount) {
         this.level = level;
         this.name = name;
-        this.requiredGoodDeedCount = requiredGoodDeedCount;
+        this.requiredVerifiedPostCount = requiredVerifiedPostCount;
         this.requiredMissionCount = requiredMissionCount;
     }
 

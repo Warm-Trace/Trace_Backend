@@ -1,6 +1,7 @@
 package com.example.trace.post.service;
 
 import com.example.trace.auth.repository.UserRepository;
+import com.example.trace.bird.BirdLevel;
 import com.example.trace.bird.BirdService;
 import com.example.trace.emotion.EmotionService;
 import com.example.trace.emotion.EmotionType;
@@ -60,10 +61,17 @@ public class PostServiceImpl implements PostService {
                 .orElseThrow(() -> new PostException(PostErrorCode.USER_NOT_FOUND));
         PostType postType = postCreateDto.getPostType();
 
+        boolean isLevelUp = false;
+        BirdLevel birdLevel = null;
+
+        Verification verification = null;
         if (verificationDto != null) {
+            verification = verificationDto.toEntity();
             user.updateVerification(verificationDto, postType);
-            birdService.checkAndUnlockBirdLevel(user);
-            user.updateVerification(verificationDto, postType);
+            birdLevel = birdService.checkAndUnlockBirdLevel(user).orElse(null);
+            if (birdLevel != null) {
+                isLevelUp = true;
+            }
         }
 
         if (postCreateDto.getContent() == null || postCreateDto.getContent().isEmpty()) {
@@ -74,10 +82,6 @@ public class PostServiceImpl implements PostService {
             throw new PostException(PostErrorCode.TITLE_EMPTY);
         }
 
-        Verification verification = null;
-        if (verificationDto != null) {
-            verification = verificationDto.toEntity();
-        }
 
         Post post = Post.builder()
                 .postType(postCreateDto.getPostType())
@@ -96,6 +100,7 @@ public class PostServiceImpl implements PostService {
 
         Post savedPost = postRepository.save(post);
 
+        // TODO(seobeeeee1001): 이미지 업로드 로직 분리
         List<MultipartFile> imageFiles = postCreateDto.getImageFiles();
         if (imageFiles != null && !imageFiles.isEmpty()) {
             int imagesToProcess = Math.min(imageFiles.size(), MAX_IMAGES);
@@ -117,7 +122,10 @@ public class PostServiceImpl implements PostService {
             }
         }
 
-        return PostDto.fromEntity(savedPost);
+        PostDto postDto = PostDto.fromEntity(savedPost);
+        postDto.addLevelUpInfo(birdLevel, isLevelUp);
+
+        return postDto;
     }
 
     @Override

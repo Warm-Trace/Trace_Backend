@@ -13,6 +13,7 @@ import com.example.trace.report.repository.UserBlockRepository;
 import com.example.trace.user.dto.BlockedUserProfileDto;
 import com.example.trace.user.dto.UpdateNickNameRequest;
 import com.example.trace.user.dto.UserDto;
+import com.example.trace.user.dto.UserVerificationInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -102,5 +103,9 @@ public class UserService {
         redisUtil.save(accessToken, "delete", expiration, TimeUnit.MILLISECONDS);
         String redisKey = "RT:" + providerId;
         redisUtil.delete(redisKey);
+    }
+
+    public UserVerificationInfo getUserVerificationInfo(User user) {
+        return UserVerificationInfo.from(user);
     }
 }

@@ -12,6 +12,7 @@ import com.example.trace.report.service.UserBlockService;
 import com.example.trace.user.dto.BlockedUserProfileDto;
 import com.example.trace.user.dto.UpdateNickNameRequest;
 import com.example.trace.user.dto.UserDto;
+import com.example.trace.user.dto.UserVerificationInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -151,5 +152,13 @@ public class UserController {
         String providerId = principalDetails.getUser().getProviderId();
         CursorResponse<PostFeedDto> response = postService.getMyPagePostsWithCursor(request, providerId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/verifications")
+    @Operation(summary = "사용자의 인증 개수 정보 조회", description = "사용자의 인증 개수 정보를 조회합니다.")
+    public ResponseEntity<UserVerificationInfo> getUserVerificationInfo(
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
+        User user = principalDetails.getUser();
+        return ResponseEntity.ok(userService.getUserVerificationInfo(user));
     }
 }
