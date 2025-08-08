@@ -104,7 +104,7 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${SPRING_DATASOURCE_URL}:3306/ebdb?serverTimezone=Asia/Seoul&connectionTimeZone=Asia/Seoul&forceConnectionTimeZoneToSession=true&useLegacyDatetimeCode=false
+    url: jdbc:mysql://${DB_HOST}:3306/ebdb?serverTimezone=Asia/Seoul&connectionTimeZone=Asia/Seoul&forceConnectionTimeZoneToSession=true&useLegacyDatetimeCode=false
     username: ebroot
     password: ${DB_PASSWORD}
     hikari:
@@ -187,7 +187,7 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${SPRING_DATASOURCE_URL}:3306/ebdb?serverTimezone=Asia/Seoul&connectionTimeZone=Asia/Seoul&forceConnectionTimeZoneToSession=true&useLegacyDatetimeCode=false
+    url: jdbc:mysql://${DB_HOST}:3306/ebdb?serverTimezone=Asia/Seoul&connectionTimeZone=Asia/Seoul&forceConnectionTimeZoneToSession=true&useLegacyDatetimeCode=false
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     hikari:
