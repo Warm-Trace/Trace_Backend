@@ -4,7 +4,7 @@ spring:
   application:
     name: Trace
   profiles:
-    active: develop
+    active: dev
   jpa:
     properties:
       hibernate:

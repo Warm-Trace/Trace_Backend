@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
-    @Value("${server.servlet.context-path:/api/v1}")
+    @Value("${server.servlet.context-path}")
     private String contextPath;
 
     @Bean
