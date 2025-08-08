@@ -1,10 +1,5 @@
 package com.example.trace.notification.domain;
 
-import static com.example.trace.global.errorcode.NotificationErrorCode.DATA_DESERIALIZATION_FAILED;
-import static com.example.trace.global.errorcode.NotificationErrorCode.DATA_SERIALIZATION_FAILED;
-import static com.example.trace.global.errorcode.NotificationErrorCode.IDENTIFIER_NOT_FOUND;
-import static com.example.trace.global.errorcode.NotificationErrorCode.TIMESTAMP_NOT_FOUND;
-
 import com.example.trace.emotion.EmotionType;
 import com.example.trace.global.exception.NotificationException;
 import com.example.trace.user.User;
@@ -12,28 +7,20 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Converter;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.jetbrains.annotations.NotNull;
+
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
+
+import static com.example.trace.global.errorcode.NotificationErrorCode.*;
 
 @Slf4j
 @Entity
@@ -77,6 +64,7 @@ public class NotificationEvent implements Comparable<NotificationEvent> {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     public boolean mapToUser(User user) {
