@@ -16,9 +16,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
-    @Value("${server.servlet.context-path}")
+    @Value("${server.servlet.context-path:/api/v1}")
     private String contextPath;
-  
+
     @Bean
     public OpenAPI openAPI(@Value("${springdoc.version}") String appVersion) {
         final String securitySchemeName = "bearerAuth";
@@ -49,7 +49,7 @@ public class OpenApiConfig {
                                 .bearerFormat("JWT")
                                 .description("JWT 토큰을 입력해주세요. 'Bearer' 프리픽스 없이 토큰값만 입력하세요.")));
     }
-    
+
     @Bean
     public GroupedOpenApi postApi() {
         return GroupedOpenApi.builder()
@@ -57,7 +57,7 @@ public class OpenApiConfig {
                 .pathsToMatch("/posts/**")
                 .build();
     }
-    
+
     @Bean
     public GroupedOpenApi authApi() {
         return GroupedOpenApi.builder()
