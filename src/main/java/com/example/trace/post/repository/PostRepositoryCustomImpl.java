@@ -163,6 +163,14 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
                 .from(emotion)
                 .where(emotion.post.eq(post));
 
+        Expression<Long> activeCommentCount =
+                JPAExpressions.select(comment.count())
+                        .from(comment)
+                        .where(
+                                comment.post.eq(post),
+                                comment.isDeleted.eq(false)
+                        );
+
 
         return queryFactory
                 .select(Projections.constructor(PostFeedDto.class,
@@ -175,7 +183,7 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
                         post.user.profileImageUrl,
                         imageUrlExpr,
                         post.viewCount,
-                        post.commentList.size().longValue(),
+                        activeCommentCount,
                         post.createdAt,
                         post.updatedAt,
                         isVerifiedExpr,
