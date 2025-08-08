@@ -4,7 +4,7 @@ spring:
   application:
     name: Trace
   profiles:
-    active: local-mysql
+    active: develop
   jpa:
     properties:
       hibernate:
@@ -252,7 +252,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/tracedb?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: root
-    password: qwer1234
+    password: your-password
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
