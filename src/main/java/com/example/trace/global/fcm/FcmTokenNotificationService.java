@@ -28,23 +28,25 @@ public class FcmTokenNotificationService {
 
         if (tokenOpt.isEmpty()) {
             log.warn("FCM 토큰을 찾을 수 없습니다 - 사용자 ID: {}", providerId);
+        } else {
+            String token = tokenOpt.get();
+
+            Message message = Message.builder()
+                    .setToken(token)
+                    .putAllData(data.toMap())  // notification 필드 대신 data 필드만 사용
+                    .build();
+
+            log.info("fcm 알림 보내는 중..");
+
+            try {
+                String response = firebaseMessaging.send(message);
+                log.info("FCM message send sucess - user ID: {}, reponse: {}", providerId, response);
+            } catch (FirebaseMessagingException e) {
+                handleFirebaseException(e, providerId, token);
+            }
         }
 
-        String token = tokenOpt.get();
 
-        Message message = Message.builder()
-                .setToken(token)
-                .putAllData(data.toMap())  // notification 필드 대신 data 필드만 사용
-                .build();
-
-        log.info("fcm 알림 보내는 중..");
-
-        try {
-            String response = firebaseMessaging.send(message);
-            log.info("FCM message send sucess - user ID: {}, reponse: {}", providerId, response);
-        } catch (FirebaseMessagingException e) {
-            handleFirebaseException(e, providerId, token);
-        }
     }
 
     /**
