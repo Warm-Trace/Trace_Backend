@@ -5,13 +5,14 @@ import com.example.trace.auth.dto.PrincipalDetails;
 import com.example.trace.file.FileType;
 import com.example.trace.file.S3UploadService;
 import com.example.trace.global.response.CursorResponse;
-import com.example.trace.post.dto.cursor.PostCursorRequest;
+import com.example.trace.post.dto.cursor.MyPagePostRequest;
 import com.example.trace.post.dto.post.PostFeedDto;
 import com.example.trace.post.service.PostService;
 import com.example.trace.report.service.UserBlockService;
 import com.example.trace.user.dto.BlockedUserProfileDto;
 import com.example.trace.user.dto.UpdateNickNameRequest;
 import com.example.trace.user.dto.UserDto;
+import com.example.trace.user.dto.UserVerificationInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -77,7 +78,7 @@ public class UserController {
     @PostMapping("{providerId}/posts")
     @Operation(summary = "다른 유저의 게시글 조회", description = "탭 별로 다른 유저의 게시글을 조회합니다.")
     public ResponseEntity<CursorResponse<PostFeedDto>> getUserPagePosts(
-            @RequestBody PostCursorRequest request,
+            @RequestBody MyPagePostRequest request,
             @PathVariable String providerId) {
         CursorResponse<PostFeedDto> response = postService.getMyPagePostsWithCursor(request, providerId);
         return ResponseEntity.ok(response);
@@ -146,10 +147,18 @@ public class UserController {
     @PostMapping("/myPosts")
     @Operation(summary = "마이페이지 게시글 조회", description = "탭 별로 마이페이지 게시글을 조회합니다.")
     public ResponseEntity<CursorResponse<PostFeedDto>> getMyPagePosts(
-            @RequestBody PostCursorRequest request,
+            @RequestBody MyPagePostRequest request,
             @AuthenticationPrincipal PrincipalDetails principalDetails) {
         String providerId = principalDetails.getUser().getProviderId();
         CursorResponse<PostFeedDto> response = postService.getMyPagePostsWithCursor(request, providerId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/verifications")
+    @Operation(summary = "사용자의 인증 개수 정보 조회", description = "사용자의 인증 개수 정보를 조회합니다.")
+    public ResponseEntity<UserVerificationInfo> getUserVerificationInfo(
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
+        User user = principalDetails.getUser();
+        return ResponseEntity.ok(userService.getUserVerificationInfo(user));
     }
 }

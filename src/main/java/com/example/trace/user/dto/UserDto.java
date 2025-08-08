@@ -29,7 +29,7 @@ public class UserDto {
                 .profileImageUrl(user.getProfileImageUrl())
                 .email(user.getEmail())
                 .verificationScore(user.getVerificationScore())
-                .verificationCount(user.getVerificationCount())
+                .verificationCount(user.getVerifiedPostCount() + user.getCompletedMissionCount())
                 .build();
     }
 }
