@@ -2,6 +2,8 @@ package com.example.trace.point;
 
 import com.example.trace.global.response.CursorResponse;
 import com.example.trace.global.response.CursorResponse.CursorMeta;
+import com.example.trace.gpt.dto.VerificationDto;
+import com.example.trace.post.domain.PostType;
 import com.example.trace.user.User;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,8 +20,11 @@ public class PointService {
     private final PointRepository pointRepository;
 
     @Transactional
-    public void save(PointSource pointSource, User user) {
-        Point point = Point.of(pointSource, user);
+    public void grantPointForPost(PostType postType, User user, VerificationDto verification) {
+        PointSource source = postType == PostType.MISSION ? PointSource.MISSION_POST : PointSource.GOOD_DEED_POST;
+        int finalPoints = source.calculatePointFor(verification);
+
+        Point point = Point.of(source, finalPoints, user);
         pointRepository.save(point);
     }
 

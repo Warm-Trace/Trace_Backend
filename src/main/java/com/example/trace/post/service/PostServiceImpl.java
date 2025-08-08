@@ -14,6 +14,7 @@ import com.example.trace.global.response.CursorResponse;
 import com.example.trace.gpt.domain.Verification;
 import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.gpt.service.PostVerificationService;
+import com.example.trace.point.PointService;
 import com.example.trace.post.domain.Post;
 import com.example.trace.post.domain.PostImage;
 import com.example.trace.post.domain.PostType;
@@ -28,15 +29,14 @@ import com.example.trace.post.dto.post.PostUpdateDto;
 import com.example.trace.post.repository.PostImageRepository;
 import com.example.trace.post.repository.PostRepository;
 import com.example.trace.user.User;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -53,6 +53,7 @@ public class PostServiceImpl implements PostService {
     private final EmotionService emotionService;
     private final PostImageRepository postImageRepository;
     private final BirdService birdService;
+    private final PointService pointService;
 
     @Override
     @Transactional
@@ -63,11 +64,12 @@ public class PostServiceImpl implements PostService {
 
         boolean isLevelUp = false;
         BirdLevel birdLevel = null;
-
         Verification verification = null;
+
         if (verificationDto != null) {
             verification = verificationDto.toEntity();
             user.updateVerification(verificationDto, postType);
+            pointService.grantPointForPost(postType, user, verificationDto);
             birdLevel = birdService.checkAndUnlockBirdLevel(user).orElse(null);
             if (birdLevel != null) {
                 isLevelUp = true;
@@ -81,7 +83,6 @@ public class PostServiceImpl implements PostService {
         if (postCreateDto.getTitle() == null || postCreateDto.getTitle().isEmpty()) {
             throw new PostException(PostErrorCode.TITLE_EMPTY);
         }
-
 
         Post post = Post.builder()
                 .postType(postCreateDto.getPostType())

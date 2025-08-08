@@ -1,6 +1,7 @@
 package com.example.trace.point;
 
 import com.example.trace.user.User;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -9,7 +10,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,9 +29,10 @@ public class Point {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Integer value;
+    private Integer amount;
 
     @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
@@ -38,11 +42,16 @@ public class Point {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public static Point of(PointSource source, User user) {
+    public static Point of(PointSource source, int points, User user) {
         return Point.builder()
                 .source(source)
-                .value(source.getPoints())
+                .amount(points)
                 .user(user)
                 .build();
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 }

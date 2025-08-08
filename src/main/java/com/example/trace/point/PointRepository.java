@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface PointRepository extends JpaRepository<Point, Long> {
-    @Query("SELECT p FROM Point P WHERE p.user = :user ORDER BY p.createdAt DESC, p.id DESC")
+    @Query("SELECT p FROM Point p WHERE p.user = :user ORDER BY p.createdAt DESC, p.id DESC")
     List<Point> findFirstPage(@Param("user") User user, Pageable pageable);
 
     @Query("""
@@ -22,7 +22,7 @@ public interface PointRepository extends JpaRepository<Point, Long> {
             """)
     List<Point> findNextPage(
             @Param("user") User user,
-            @Param("cursorDateTime") LocalDateTime dateTime,
+            @Param("dateTime") LocalDateTime dateTime,
             @Param("id") Long id,
             Pageable pageable
     );

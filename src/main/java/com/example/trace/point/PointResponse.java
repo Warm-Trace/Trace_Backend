@@ -8,14 +8,14 @@ import lombok.Getter;
 @Builder
 public class PointResponse {
     private Long id;
-    private Integer value;
+    private Integer amount;
     private LocalDateTime createdAt;
     private PointSource source;
 
     public static PointResponse fromEntity(Point point) {
         return PointResponse.builder()
                 .id(point.getId())
-                .value(point.getValue())
+                .amount(point.getAmount())
                 .createdAt(point.getCreatedAt())
                 .source(point.getSource())
                 .build();

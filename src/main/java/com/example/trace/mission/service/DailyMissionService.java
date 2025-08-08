@@ -16,7 +16,6 @@ import com.example.trace.mission.repository.MissionRepository;
 import com.example.trace.mission.util.MissionDateUtil;
 import com.example.trace.notification.service.NotificationEventService;
 import com.example.trace.point.PointService;
-import com.example.trace.point.PointSource;
 import com.example.trace.post.dto.post.PostCreateDto;
 import com.example.trace.post.dto.post.PostDto;
 import com.example.trace.post.service.PostService;
@@ -64,7 +63,7 @@ public class DailyMissionService {
         PostCreateDto postCreateDto = PostCreateDto.createForMission(dailyMissionDto, description);
         PostDto postDto = postService.createPost(postCreateDto, userProviderId, verificationDto);
 
-        complete(dailyMission, postDto.getId(), verificationDto.isTextResult(), user);
+        complete(dailyMission, postDto.getId(), user);
         return postDto;
     }
 
@@ -192,14 +191,9 @@ public class DailyMissionService {
                 .build();
     }
 
-    private void complete(DailyMission assignedDailyMission, Long postId, boolean isText, User user) {
+    private void complete(DailyMission assignedDailyMission, Long postId, User user) {
         assignedDailyMission.updateVerification(true, postId);
         dailyMissionRepository.save(assignedDailyMission);
-        if (isText) {
-            pointService.save(PointSource.MISSION_POST_TEXT, user);
-        } else {
-            pointService.save(PointSource.MISSION_POST_IMAGE, user);
-        }
     }
 }
 
