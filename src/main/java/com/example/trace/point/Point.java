@@ -1,5 +1,6 @@
 package com.example.trace.point;
 
+import com.example.trace.post.domain.Post;
 import com.example.trace.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -42,13 +44,12 @@ public class Point {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public static Point of(PointSource source, int points, User user) {
-        return Point.builder()
-                .source(source)
-                .amount(points)
-                .user(user)
-                .build();
-    }
+    @OneToOne
+    @JoinColumn(name = "post_id")
+    private Post post;
+
+    @Column(nullable = false)
+    private String content;
 
     @PrePersist
     protected void onCreate() {

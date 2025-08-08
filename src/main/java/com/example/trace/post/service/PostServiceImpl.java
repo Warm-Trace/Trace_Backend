@@ -69,7 +69,6 @@ public class PostServiceImpl implements PostService {
         if (verificationDto != null) {
             verification = verificationDto.toEntity();
             user.updateVerification(verificationDto, postType);
-            pointService.grantPointForPost(postType, user, verificationDto);
             birdLevel = birdService.checkAndUnlockBirdLevel(user).orElse(null);
             if (birdLevel != null) {
                 isLevelUp = true;
@@ -95,11 +94,12 @@ public class PostServiceImpl implements PostService {
                         postCreateDto.getPostType() == PostType.MISSION ? postCreateDto.getMissionContent() : null)
                 .build();
 
+        Post savedPost = postRepository.save(post);
+
         if (verification != null) {
             verification.connectToPost(post);
+            pointService.grantPointForPost(savedPost, user, verificationDto);
         }
-
-        Post savedPost = postRepository.save(post);
 
         // TODO(seobeeeee1001): 이미지 업로드 로직 분리
         List<MultipartFile> imageFiles = postCreateDto.getImageFiles();
