@@ -5,12 +5,14 @@ import com.example.trace.post.domain.Post;
 import com.example.trace.report.ReportReason;
 import com.example.trace.report.ReportStatus;
 import com.example.trace.user.User;
+import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
@@ -25,16 +27,19 @@ public class Report {
     // 신고자
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reporter_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User reporter;
 
     // 신고된 게시글 (댓글 신고의 경우 null)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Post post;
 
     // 신고된 댓글 (게시글 신고의 경우 null)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comment_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Comment comment;
 
     @Enumerated(EnumType.STRING)
