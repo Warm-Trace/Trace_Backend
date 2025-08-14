@@ -1,6 +1,6 @@
 package com.example.trace.point;
 
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Pageable;

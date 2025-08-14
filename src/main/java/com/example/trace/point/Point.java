@@ -1,7 +1,7 @@
 package com.example.trace.point;
 
 import com.example.trace.post.domain.Post;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

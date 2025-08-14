@@ -5,7 +5,7 @@ import com.example.trace.global.response.CursorResponse.CursorMeta;
 import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.post.domain.Post;
 import com.example.trace.post.domain.PostType;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
 import com.example.trace.util.StringUtil;
 import java.time.LocalDateTime;
 import java.util.List;
