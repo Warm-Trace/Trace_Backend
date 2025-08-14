@@ -1,6 +1,7 @@
 package com.example.trace.point;
 
 import com.example.trace.post.domain.Post;
+import com.example.trace.user.domain.AttendanceDay;
 import com.example.trace.user.domain.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -47,6 +48,10 @@ public class Point {
     @OneToOne
     @JoinColumn(name = "post_id")
     private Post post;
+
+    @OneToOne
+    @JoinColumn(name = "attendance_day_id")
+    private AttendanceDay attendanceDay;
 
     @Column(nullable = false)
     private String content;
