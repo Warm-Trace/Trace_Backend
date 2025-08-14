@@ -15,14 +15,16 @@ import com.example.trace.post.repository.PostRepository;
 import com.example.trace.report.service.UserBlockService;
 import com.example.trace.user.User;
 import com.example.trace.user.UserService;
+import com.example.trace.util.StringUtil;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -83,8 +85,7 @@ public class CommentService {
 
     public CommentDto addChildrenComment(Long postId, Long commentId, CommentCreateDto commentCreateDto,
                                          String providerId) {
-        User user = userService.getUser(providerId);
-
+        User writer = userService.getUser(providerId);
         Comment parentComment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new PostException(PostErrorCode.COMMENT_NOT_FOUND));
 
@@ -102,12 +103,13 @@ public class CommentService {
         Comment childrenComment = Comment.builder()
                 .post(postToAddComment)
                 .content(commentCreateDto.getContent())
-                .user(user)
+                .user(writer)
                 .parent(parentComment)
                 .build();
-        commentRepository.save(childrenComment);
 
+        commentRepository.save(childrenComment);
         parentComment.addChild(childrenComment);
+        notifyRelatedAuthors(postId, commentCreateDto, providerId, postToAddComment, parentComment, writer);
 
         return CommentDto.fromEntity(childrenComment, providerId);
     }
@@ -189,5 +191,37 @@ public class CommentService {
         return parentComments;
     }
 
+    private void notifyRelatedAuthors(Long postId, CommentCreateDto commentCreateDto, String providerId,
+                                      Post postToAddComment,
+                                      Comment parentComment, User writer) {
+        Set<Long> notified = new HashSet<>();
+        boolean isOwner = postToAddComment.isOwner(providerId);
+        PostType postType = postToAddComment.getPostType();
+        String content = commentCreateDto.getContent();
 
+        // 글 작성자에게 전송
+        notifyIfNotOwner(isOwner, postToAddComment.getUser(), postId, postType, content, notified);
+
+        // 댓글 작성자에게 전송
+        isOwner = parentComment.isOwner(writer);
+        notifyIfNotOwner(isOwner, parentComment.getUser(), postId, postType, content, notified);
+
+        // 대댓글 작성자에게 전송
+        for (Comment child : parentComment.getChildren()) {
+            isOwner = child.isOwner(writer);
+            notifyIfNotOwner(isOwner, child.getUser(), postId, postType, content, notified);
+        }
+    }
+
+    private void notifyIfNotOwner(boolean isOwner, User author, Long postId, PostType postType, String content,
+                                  Set<Long> notified) {
+        if (isOwner) {
+            return;
+        }
+        if (!notified.add(author.getId())) {
+            return;
+        }
+        String preview = StringUtil.truncateLess(content);
+        notificationEventService.sendCommentNotification(author, postId, postType, preview);
+    }
 }
