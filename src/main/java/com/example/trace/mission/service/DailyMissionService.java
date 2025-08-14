@@ -15,6 +15,7 @@ import com.example.trace.mission.repository.DailyMissionRepository;
 import com.example.trace.mission.repository.MissionRepository;
 import com.example.trace.mission.util.MissionDateUtil;
 import com.example.trace.notification.service.NotificationEventService;
+import com.example.trace.point.PointService;
 import com.example.trace.post.dto.post.PostCreateDto;
 import com.example.trace.post.dto.post.PostDto;
 import com.example.trace.post.service.PostService;
@@ -45,6 +46,7 @@ public class DailyMissionService {
 
     private static final int MAX_CHANGES_PER_DAY = 10;
     private static final int DEFAULT_PAGE_SIZE = 20;
+    private final PointService pointService;
 
 
     @Transactional
@@ -61,7 +63,7 @@ public class DailyMissionService {
         PostCreateDto postCreateDto = PostCreateDto.createForMission(dailyMissionDto, description);
         PostDto postDto = postService.createPost(postCreateDto, userProviderId, verificationDto);
 
-        complete(dailyMission, postDto.getId());
+        complete(dailyMission, postDto.getId(), user);
         return postDto;
     }
 
@@ -189,7 +191,7 @@ public class DailyMissionService {
                 .build();
     }
 
-    private void complete(DailyMission assignedDailyMission, Long postId) {
+    private void complete(DailyMission assignedDailyMission, Long postId, User user) {
         assignedDailyMission.updateVerification(true, postId);
         dailyMissionRepository.save(assignedDailyMission);
     }
