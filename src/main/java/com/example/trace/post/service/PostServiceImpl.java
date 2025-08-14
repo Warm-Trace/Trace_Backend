@@ -27,16 +27,15 @@ import com.example.trace.post.dto.post.PostFeedDto;
 import com.example.trace.post.dto.post.PostUpdateDto;
 import com.example.trace.post.repository.PostImageRepository;
 import com.example.trace.post.repository.PostRepository;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -81,7 +80,6 @@ public class PostServiceImpl implements PostService {
         if (postCreateDto.getTitle() == null || postCreateDto.getTitle().isEmpty()) {
             throw new PostException(PostErrorCode.TITLE_EMPTY);
         }
-
 
         Post post = Post.builder()
                 .postType(postCreateDto.getPostType())

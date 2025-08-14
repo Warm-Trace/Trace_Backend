@@ -7,7 +7,7 @@ import com.example.trace.post.domain.Post;
 import com.example.trace.post.domain.PostType;
 import com.example.trace.post.repository.PostRepository;
 import com.example.trace.report.service.UserBlockService;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

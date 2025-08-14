@@ -12,7 +12,7 @@ import com.example.trace.post.repository.PostRepository;
 import com.example.trace.report.domain.Report;
 import com.example.trace.report.dto.ReportRequest;
 import com.example.trace.report.repository.ReportRepository;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

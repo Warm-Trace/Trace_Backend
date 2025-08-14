@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.post.domain.PostType;
+import com.example.trace.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

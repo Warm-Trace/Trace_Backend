@@ -1,6 +1,8 @@
 package com.example.trace.user;
 
 
+import static com.example.trace.global.errorcode.UserErrorCode.USER_NOT_FOUND;
+
 import com.example.trace.auth.Util.JwtUtil;
 import com.example.trace.auth.Util.RedisUtil;
 import com.example.trace.auth.repository.UserRepository;
@@ -10,18 +12,16 @@ import com.example.trace.global.exception.TokenException;
 import com.example.trace.global.exception.UserException;
 import com.example.trace.report.domain.UserBlock;
 import com.example.trace.report.repository.UserBlockRepository;
+import com.example.trace.user.domain.User;
 import com.example.trace.user.dto.BlockedUserProfileDto;
 import com.example.trace.user.dto.UpdateNickNameRequest;
 import com.example.trace.user.dto.UserDto;
 import com.example.trace.user.dto.UserVerificationInfo;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static com.example.trace.global.errorcode.UserErrorCode.USER_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor

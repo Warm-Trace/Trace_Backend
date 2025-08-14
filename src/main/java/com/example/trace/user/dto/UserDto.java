@@ -1,8 +1,12 @@
 package com.example.trace.user.dto;
 
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @NoArgsConstructor
 @AllArgsConstructor

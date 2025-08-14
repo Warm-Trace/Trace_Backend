@@ -8,7 +8,7 @@ import com.example.trace.mission.mission.Mission;
 import com.example.trace.notification.domain.NotificationEvent.NotificationData;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.notification.service.NotificationEventService;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import java.util.Optional;

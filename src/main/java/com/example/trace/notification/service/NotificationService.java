@@ -12,7 +12,7 @@ import com.example.trace.notification.dto.CursorNotificationResponse;
 import com.example.trace.notification.dto.CursorNotificationResponse.CursorMeta;
 import com.example.trace.notification.dto.NotificationResponse;
 import com.example.trace.notification.repository.NotificationEventRepository;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;

@@ -13,16 +13,15 @@ import com.example.trace.post.dto.cursor.CommentCursorRequest;
 import com.example.trace.post.repository.CommentRepository;
 import com.example.trace.post.repository.PostRepository;
 import com.example.trace.report.service.UserBlockService;
-import com.example.trace.user.User;
 import com.example.trace.user.UserService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.example.trace.user.domain.User;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor

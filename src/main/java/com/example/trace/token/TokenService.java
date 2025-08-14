@@ -7,7 +7,7 @@ import com.example.trace.auth.dto.TokenResponse;
 import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.global.errorcode.TokenErrorCode;
 import com.example.trace.global.exception.TokenException;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * 토큰 관리 서비스
- * JWT 토큰의 재발급 및 검증을 담당합니다.
+ * 토큰 관리 서비스 JWT 토큰의 재발급 및 검증을 담당합니다.
  */
 @Service
 @RequiredArgsConstructor
@@ -30,7 +29,7 @@ public class TokenService {
 
     /**
      * 리프레시 토큰을 검증하고 새로운 액세스 토큰을 발급합니다.
-     * 
+     *
      * @param refreshToken 사용자의 리프레시 토큰
      * @return 새로운 액세스 토큰과 리프레시 토큰이 포함된 TokenResponse
      * @throws ResponseStatusException 토큰이 유효하지 않거나, 만료되었거나, 사용자를 찾을 수 없는 경우

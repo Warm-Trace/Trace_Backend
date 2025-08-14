@@ -1,4 +1,4 @@
-package com.example.trace.user;
+package com.example.trace.user.domain;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
