@@ -1,4 +1,4 @@
-package com.example.trace.auth.repository;
+package com.example.trace.user.repository;
 
 import com.example.trace.user.domain.User;
 import java.util.Optional;

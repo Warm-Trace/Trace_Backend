@@ -10,6 +10,7 @@ import com.example.trace.post.dto.post.PostFeedDto;
 import com.example.trace.post.service.PostService;
 import com.example.trace.report.service.UserBlockService;
 import com.example.trace.user.domain.User;
+import com.example.trace.user.dto.AttendanceResponse;
 import com.example.trace.user.dto.BlockedUserProfileDto;
 import com.example.trace.user.dto.UpdateNickNameRequest;
 import com.example.trace.user.dto.UserDto;
@@ -167,5 +168,21 @@ public class UserController {
             @AuthenticationPrincipal PrincipalDetails principalDetails) {
         User user = principalDetails.getUser();
         return ResponseEntity.ok(userService.getUserVerificationInfo(user));
+    }
+
+    @PostMapping("/attendance")
+    @Operation(summary = "출석 체크", description = "출석 체크 이후 포인트가 지급됩니다.")
+    public ResponseEntity<?> attend(@AuthenticationPrincipal PrincipalDetails userDetails) {
+        Long userId = userDetails.getUser().getId();
+        AttendanceResponse response = userService.attend(userId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/attendance/today")
+    @Operation(summary = "오늘 출석 체크 유무 확인", description = "출석 유무를 확인합니다.")
+    public ResponseEntity<?> todayAttendance(@AuthenticationPrincipal PrincipalDetails userDetails) {
+        Long userId = userDetails.getUser().getId();
+        boolean todayAttendance = userService.getTodayAttendance(userId);
+        return ResponseEntity.ok(todayAttendance);
     }
 }

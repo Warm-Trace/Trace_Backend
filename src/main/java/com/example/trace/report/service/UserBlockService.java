@@ -2,12 +2,12 @@ package com.example.trace.report.service;
 
 import static com.example.trace.global.errorcode.UserErrorCode.USER_NOT_FOUND;
 
-import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.global.exception.UserException;
 import com.example.trace.report.domain.UserBlock;
 import com.example.trace.report.dto.BlockedUserDto;
 import com.example.trace.report.repository.UserBlockRepository;
 import com.example.trace.user.domain.User;
+import com.example.trace.user.repository.UserRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

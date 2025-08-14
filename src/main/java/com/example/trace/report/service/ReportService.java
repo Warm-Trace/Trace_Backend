@@ -1,6 +1,5 @@
 package com.example.trace.report.service;
 
-import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.global.errorcode.ReportErrorCode;
 import com.example.trace.global.errorcode.UserErrorCode;
 import com.example.trace.global.exception.ReportException;
@@ -13,6 +12,7 @@ import com.example.trace.report.domain.Report;
 import com.example.trace.report.dto.ReportRequest;
 import com.example.trace.report.repository.ReportRepository;
 import com.example.trace.user.domain.User;
+import com.example.trace.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
