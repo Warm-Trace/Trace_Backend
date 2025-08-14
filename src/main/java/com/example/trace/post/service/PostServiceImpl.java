@@ -13,6 +13,7 @@ import com.example.trace.global.response.CursorResponse;
 import com.example.trace.gpt.domain.Verification;
 import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.gpt.service.PostVerificationService;
+import com.example.trace.point.PointService;
 import com.example.trace.post.domain.Post;
 import com.example.trace.post.domain.PostImage;
 import com.example.trace.post.domain.PostType;
@@ -52,6 +53,7 @@ public class PostServiceImpl implements PostService {
     private final EmotionService emotionService;
     private final PostImageRepository postImageRepository;
     private final BirdService birdService;
+    private final PointService pointService;
 
     @Override
     @Transactional
@@ -62,8 +64,8 @@ public class PostServiceImpl implements PostService {
 
         boolean isLevelUp = false;
         BirdLevel birdLevel = null;
-
         Verification verification = null;
+
         if (verificationDto != null) {
             verification = verificationDto.toEntity();
             user.updateVerification(verificationDto, postType);
@@ -92,11 +94,12 @@ public class PostServiceImpl implements PostService {
                         postCreateDto.getPostType() == PostType.MISSION ? postCreateDto.getMissionContent() : null)
                 .build();
 
+        Post savedPost = postRepository.save(post);
+
         if (verification != null) {
             verification.connectToPost(post);
+            pointService.grantPointForPost(savedPost, user, verificationDto);
         }
-
-        Post savedPost = postRepository.save(post);
 
         // TODO(seobeeeee1001): 이미지 업로드 로직 분리
         List<MultipartFile> imageFiles = postCreateDto.getImageFiles();
