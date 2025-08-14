@@ -173,8 +173,8 @@ public class UserController {
     @PostMapping("/attendance")
     @Operation(summary = "출석 체크", description = "출석 체크 이후 포인트가 지급됩니다.")
     public ResponseEntity<?> attend(@AuthenticationPrincipal PrincipalDetails userDetails) {
-        Long userId = userDetails.getUser().getId();
-        AttendanceResponse response = userService.attend(userId);
+        User user = userDetails.getUser();
+        AttendanceResponse response = userService.attend(user);
         return ResponseEntity.ok(response);
     }
 

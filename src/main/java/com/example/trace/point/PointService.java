@@ -5,6 +5,7 @@ import com.example.trace.global.response.CursorResponse.CursorMeta;
 import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.post.domain.Post;
 import com.example.trace.post.domain.PostType;
+import com.example.trace.user.domain.AttendanceDay;
 import com.example.trace.user.domain.User;
 import com.example.trace.util.StringUtil;
 import java.time.LocalDateTime;
@@ -37,6 +38,22 @@ public class PointService {
                 .build();
 
         pointRepository.save(point);
+    }
+
+    @Transactional
+    public int grantAttendancePoint(User user, AttendanceDay attendanceDay) {
+        PointSource source = PointSource.ATTENDANCE;
+
+        Point point = Point.builder()
+                .source(source)
+                .amount(source.getBasePoints())
+                .content(source.getDescription())
+                .attendanceDay(attendanceDay)
+                .user(user)
+                .build();
+
+        pointRepository.save(point);
+        return source.getBasePoints();
     }
 
     @Transactional(readOnly = true)

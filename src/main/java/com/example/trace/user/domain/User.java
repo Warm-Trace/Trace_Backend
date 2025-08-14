@@ -43,7 +43,8 @@ public class User {
     private String profileImageUrl;
 
     @Builder.Default
-    private Long verificationScore = 0L;
+    @Column(nullable = false)
+    private Long pointBalance = 0L;
 
     @Builder.Default
     private Long verifiedPostCount = 0L;
@@ -72,8 +73,12 @@ public class User {
         this.profileImageUrl = newProfileImageUrl;
     }
 
+    public void getPoint(long point) {
+        this.pointBalance += point;
+    }
+
     public void updateVerification(VerificationDto verificationDto, PostType type) {
-        this.verificationScore += type.getTotalScore(verificationDto);
+        this.pointBalance += type.getTotalScore(verificationDto);
         if (verificationDto.isTextResult() || verificationDto.isImageResult()) {
             if (type == PostType.GOOD_DEED) {
                 this.verifiedPostCount++;

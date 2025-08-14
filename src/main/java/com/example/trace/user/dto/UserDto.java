@@ -23,7 +23,7 @@ public class UserDto {
     @Schema(description = "이메일")
     String email;
     @Schema(description = "선행 점수")
-    Long verificationScore;
+    Long pointBalance;
     @Schema(description = "선행 인증 개수")
     Long verificationCount;
 
@@ -32,7 +32,7 @@ public class UserDto {
                 .nickname(user.getNickname())
                 .profileImageUrl(user.getProfileImageUrl())
                 .email(user.getEmail())
-                .verificationScore(user.getVerificationScore())
+                .pointBalance(user.getPointBalance())
                 .verificationCount(user.getVerifiedPostCount() + user.getCompletedMissionCount())
                 .build();
     }
