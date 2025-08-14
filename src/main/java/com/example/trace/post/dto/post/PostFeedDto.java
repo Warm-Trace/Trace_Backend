@@ -2,19 +2,17 @@ package com.example.trace.post.dto.post;
 
 import com.example.trace.emotion.EmotionType;
 import com.example.trace.post.domain.PostType;
+import com.example.trace.util.StringUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @Builder
 @NoArgsConstructor
-@AllArgsConstructor
 @Schema(description = "게시글 피드 DTO")
 public class PostFeedDto {
     @Schema(description = "게시글 ID", example = "1")
@@ -66,4 +64,27 @@ public class PostFeedDto {
 
     @Schema(description = "내가 한 감정표현 타입", example = "HEARTWARMING", nullable = true)
     private EmotionType myEmotionType;
+
+    public PostFeedDto(Long postId, PostType postType, String title, String content, String providerId, String nickname,
+                       String profileImageUrl, String imageUrl, Long viewCount, Long commentCount,
+                       LocalDateTime createdAt,
+                       LocalDateTime updatedAt, boolean isVerified, boolean isOwner, Long emotionCountSum,
+                       EmotionType myEmotionType) {
+        this.postId = postId;
+        this.postType = postType;
+        this.title = title;
+        this.content = StringUtil.truncate(content);
+        this.providerId = providerId;
+        this.nickname = nickname;
+        this.profileImageUrl = profileImageUrl;
+        this.imageUrl = imageUrl;
+        this.viewCount = viewCount;
+        this.commentCount = commentCount;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.isVerified = isVerified;
+        this.isOwner = isOwner;
+        this.emotionCountSum = emotionCountSum;
+        this.myEmotionType = myEmotionType;
+    }
 }
