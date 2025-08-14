@@ -28,7 +28,7 @@ public class NotificationEventService {
         String providerId = user.getProviderId();
         NotificationEvent.NotificationData data = NotificationData.builder()
                 .id(UuidCreator.getTimeOrderedEpoch())
-                .title("오늘의 선행 미션 도착!")
+                .title("일일 선행 미션")
                 .body(mission.getDescription())
                 .timestamp(LocalDateTime.now())
                 .type(SourceType.MISSION)
@@ -62,7 +62,7 @@ public class NotificationEventService {
             String nickName) {
         NotificationEvent.NotificationData data = NotificationData.builder()
                 .id(UuidCreator.getTimeOrderedEpoch())
-                .title(postType.getType() + " 게시판")
+                .title(postType.getType() + "게시판")
                 .body(nickName + "님이 당신의 흔적에 " + emotionType.getDescription() + "를 남겼어요")
                 .timestamp(LocalDateTime.now())
                 .type(SourceType.EMOTION)
