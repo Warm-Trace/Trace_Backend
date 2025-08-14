@@ -4,7 +4,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.PrePersist;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
@@ -27,13 +26,6 @@ public class AttendanceDay {
 
     @Column(nullable = false, updatable = false)
     private Instant checkedAt;
-
-    @PrePersist
-    void prePersist() {
-        if (checkedAt == null) {
-            checkedAt = Instant.now();
-        }
-    }
 
     @Embeddable
     @Getter

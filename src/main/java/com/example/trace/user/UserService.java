@@ -5,18 +5,22 @@ import static com.example.trace.global.errorcode.UserErrorCode.USER_NOT_FOUND;
 
 import com.example.trace.auth.Util.JwtUtil;
 import com.example.trace.auth.Util.RedisUtil;
-import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.global.errorcode.TokenErrorCode;
 import com.example.trace.global.errorcode.UserErrorCode;
 import com.example.trace.global.exception.TokenException;
 import com.example.trace.global.exception.UserException;
 import com.example.trace.report.domain.UserBlock;
 import com.example.trace.report.repository.UserBlockRepository;
+import com.example.trace.user.domain.AttendanceDay.AttendanceId;
 import com.example.trace.user.domain.User;
+import com.example.trace.user.dto.AttendanceResponse;
 import com.example.trace.user.dto.BlockedUserProfileDto;
 import com.example.trace.user.dto.UpdateNickNameRequest;
 import com.example.trace.user.dto.UserDto;
 import com.example.trace.user.dto.UserVerificationInfo;
+import com.example.trace.user.repository.AttendanceRepository;
+import com.example.trace.user.repository.UserRepository;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +34,7 @@ public class UserService {
     private final UserBlockRepository userBlockRepository;
     private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
+    private final AttendanceRepository attendanceRepository;
 
     /**
      * providerId로 사용자 정보를 조회합니다.
@@ -107,5 +112,28 @@ public class UserService {
 
     public UserVerificationInfo getUserVerificationInfo(User user) {
         return UserVerificationInfo.from(user);
+    }
+
+    @Transactional
+    public AttendanceResponse attend(long userId) {
+        LocalDate today = LocalDate.now();
+
+        int inserted = attendanceRepository.insertIfAbsent(userId, today);
+        long pointsAdded = 0;
+
+        boolean isNewCheckin = (inserted == 1);
+        if (isNewCheckin) {
+            // TODO(gyunho): 포인트 지급
+        }
+
+        return new AttendanceResponse(today, true, pointsAdded, 0);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean getTodayAttendance(Long userId) {
+        LocalDate today = LocalDate.now();
+        boolean attended = attendanceRepository.findById(new AttendanceId(userId, today)).isPresent();
+
+        return attended;
     }
 }
