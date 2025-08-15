@@ -6,6 +6,7 @@ import com.example.trace.mission.mission.Mission;
 import com.example.trace.notification.domain.NotificationEvent;
 import com.example.trace.notification.domain.NotificationEvent.NotificationData;
 import com.example.trace.notification.domain.NotificationEventType;
+import com.example.trace.notification.domain.NotificationSetting;
 import com.example.trace.notification.domain.SourceType;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.post.domain.PostType;
@@ -23,8 +24,12 @@ public class NotificationEventService {
 
     private final FcmTokenNotificationService fcmTokenNotificationService;
     private final NotificationEventRepository notificationEventRepository;
+    private final NotificationService notificationService;
 
     public NotificationData sendDailyMissionAssignedNotification(User user, Mission mission) {
+        if (!canSendNotification(SourceType.MISSION, user)) {
+            return NotificationData.builder().build();
+        }
         String providerId = user.getProviderId();
         NotificationEvent.NotificationData data = NotificationData.builder()
                 .id(UuidCreator.getTimeOrderedEpoch())
@@ -41,6 +46,9 @@ public class NotificationEventService {
     }
 
     public void sendCommentNotification(User user, Long postId, PostType postType, String commentContent) {
+        if (!canSendNotification(SourceType.COMMENT, user)) {
+            return;
+        }
         NotificationEvent.NotificationData data = NotificationData.builder()
                 .id(UuidCreator.getTimeOrderedEpoch())
                 .title(postType.getType() + "게시판")
@@ -60,6 +68,9 @@ public class NotificationEventService {
             PostType postType,
             EmotionType emotionType,
             String nickName) {
+        if (!canSendNotification(SourceType.EMOTION, user)) {
+            return;
+        }
         NotificationEvent.NotificationData data = NotificationData.builder()
                 .id(UuidCreator.getTimeOrderedEpoch())
                 .title(postType.getType() + "게시판")
@@ -89,6 +100,11 @@ public class NotificationEventService {
 
         event.mapToUser(user);
         notificationEventRepository.save(event);
+    }
+
+    private boolean canSendNotification(SourceType type, User user) {
+        NotificationSetting setting = notificationService.getSettingFrom(user.getId());
+        return setting.statusOf(type);
     }
 
     //TODO(gyunho): 30일 지나면 삭제하는 기능 추가

@@ -8,6 +8,7 @@ import com.example.trace.mission.mission.Mission;
 import com.example.trace.notification.domain.NotificationEvent.NotificationData;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.notification.service.NotificationEventService;
+import com.example.trace.notification.service.NotificationService;
 import com.example.trace.user.User;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
@@ -31,6 +32,8 @@ class NotificationEventServiceTest {
     private FcmTokenService fcmTokenService;
     @Mock
     private NotificationEventRepository notificationEventRepository;
+    @Mock
+    private NotificationService notificationService;
 
     @BeforeEach
     void setUp() {
@@ -40,7 +43,8 @@ class NotificationEventServiceTest {
         fcmTokenNotificationService = new FcmTokenNotificationService(firebaseMessaging, fcmTokenService);
         notificationEventService = new NotificationEventService(
                 fcmTokenNotificationService,
-                notificationEventRepository
+                notificationEventRepository,
+                notificationService
         );
     }
 

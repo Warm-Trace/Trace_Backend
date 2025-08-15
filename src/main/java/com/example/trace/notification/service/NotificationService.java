@@ -105,7 +105,7 @@ public class NotificationService {
         setting.setNotificationEnabled(true, SourceType.fromString(type));
     }
 
-    private NotificationSetting getSettingFrom(Long userId) {
+    public NotificationSetting getSettingFrom(Long userId) {
         User user = userRepository.getReferenceById(userId); // 프록시로 가져옴
         return notificationSettingRepository.findByUser(user).orElseGet(() -> {
             try {

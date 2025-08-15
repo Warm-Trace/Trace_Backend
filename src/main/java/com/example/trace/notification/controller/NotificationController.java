@@ -69,10 +69,10 @@ public class NotificationController {
     }
 
     @PostMapping("/off/{type}")
-    @Operation(summary = "알림 채널 켜기", description = "특정 알림 채널을 켜 알림을 수신합니다.")
+    @Operation(summary = "알림 채널 끄기", description = "특정 알림 채널을 끄고 알림을 수신하지 않습니다.")
     public ResponseEntity<?> turnOff(@PathVariable("type") String type,
                                      @AuthenticationPrincipal PrincipalDetails current) {
         notificationService.turnOff(type, current.getUser().getId());
-        return ResponseEntity.ok(type + "알림이 발송되지 않습니다.");
+        return ResponseEntity.ok(type + "알림이 더이상 발송되지 않습니다.");
     }
 }
