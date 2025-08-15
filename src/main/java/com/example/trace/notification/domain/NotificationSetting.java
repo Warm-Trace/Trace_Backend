@@ -25,13 +25,13 @@ public class NotificationSetting {
     private User user;
 
     @Column(nullable = false)
-    private boolean mission = false;
+    private boolean mission = true;
 
     @Column(nullable = false)
-    private boolean comment = false;
+    private boolean comment = true;
 
     @Column(nullable = false)
-    private boolean emotion = false;
+    private boolean emotion = true;
 
     protected NotificationSetting() {
     }
@@ -51,5 +51,14 @@ public class NotificationSetting {
             case EMOTION -> this.emotion = enabled;
             default -> log.error("Unsupported notification type requested: {}", type);
         }
+    }
+
+    public boolean statusOf(SourceType type) {
+        return switch (type) {
+            case MISSION -> this.mission;
+            case COMMENT -> this.comment;
+            case EMOTION -> this.emotion;
+            default -> false;
+        };
     }
 }
