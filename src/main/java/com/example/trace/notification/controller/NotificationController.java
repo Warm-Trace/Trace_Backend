@@ -16,6 +16,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -57,5 +58,21 @@ public class NotificationController {
                                     @AuthenticationPrincipal PrincipalDetails current) {
         notificationService.delete(notificationId, current.getUser().getProviderId());
         return ResponseEntity.ok("삭제되었습니다.");
+    }
+
+    @PostMapping("/on/{type}")
+    @Operation(summary = "알림 채널 켜기", description = "특정 알림 채널을 켜 알림을 수신합니다.")
+    public ResponseEntity<?> turnOn(@PathVariable("type") String type,
+                                    @AuthenticationPrincipal PrincipalDetails current) {
+        notificationService.turnOn(type, current.getUser().getId());
+        return ResponseEntity.ok(type + "알림이 수신됩니다.");
+    }
+
+    @PostMapping("/off/{type}")
+    @Operation(summary = "알림 채널 켜기", description = "특정 알림 채널을 켜 알림을 수신합니다.")
+    public ResponseEntity<?> turnOff(@PathVariable("type") String type,
+                                     @AuthenticationPrincipal PrincipalDetails current) {
+        notificationService.turnOff(type, current.getUser().getId());
+        return ResponseEntity.ok(type + "알림이 발송되지 않습니다.");
     }
 }
