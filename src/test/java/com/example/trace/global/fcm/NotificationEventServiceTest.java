@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import com.example.trace.mission.mission.Mission;
 import com.example.trace.notification.domain.NotificationEvent.NotificationData;
+import com.example.trace.notification.domain.NotificationSetting;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.notification.service.NotificationEventService;
 import com.example.trace.notification.service.NotificationService;
@@ -53,13 +54,16 @@ class NotificationEventServiceTest {
         //given
         String providerId = "123";
         User user = User.builder()
+                .id(1L)
                 .providerId(providerId)
                 .build();
         Mission mission = new Mission(1L, "낯선 사람에게 친절하게 인사하기");
+        NotificationSetting setting = NotificationSetting.of(user);
 
         //when
         when(fcmTokenService.getTokenByProviderId(providerId)).thenReturn(Optional.of("token"));
         when(firebaseMessaging.send(any(Message.class))).thenReturn("response");
+        when(notificationService.getSettingsOf(user.getId())).thenReturn(setting);
 
         NotificationData sentData = notificationEventService.sendDailyMissionAssignedNotification(user, mission);
 
