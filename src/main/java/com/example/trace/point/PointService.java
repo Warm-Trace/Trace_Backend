@@ -41,38 +41,31 @@ public class PointService {
 
     @Transactional(readOnly = true)
     public CursorResponse<PointResponse> getPage(Integer size, Long id, LocalDateTime dateTime, User user) {
-        List<Point> points;
+        int fetchSize = size + 1;
+        Sort sortCriteria = Sort.by("createdAt").descending().and(Sort.by("id").descending());
+        PageRequest pageable = PageRequest.of(0, fetchSize, sortCriteria);
 
-        if (isFirstPage(id, dateTime)) {
-            points = pointRepository.findFirstPage(
-                    user,
-                    PageRequest.of(0, size, Sort.by("createdAt").descending().and(Sort.by("id").descending()))
-            );
-        } else {
-            points = pointRepository.findNextPage(
-                    user,
-                    dateTime,
-                    id,
-                    PageRequest.of(0, size, Sort.by("createdAt").descending().and(Sort.by("id").descending()))
-            );
+        List<Point> points = isFirstPage(id, dateTime)
+                ? pointRepository.findFirstPage(user, pageable)
+                : pointRepository.findNextPage(user, dateTime, id, pageable);
+
+        boolean hasNext = points.size() > size;
+        if (hasNext) {
+            points = points.subList(0, size);
         }
 
-        List<PointResponse> response = points.stream()
-                .map(PointResponse::fromEntity)
-                .toList();
-
-        boolean hasNext = response.size() == size;
-        PointResponse last = response.get(response.size() - 1);
-        CursorMeta nextCursor = getNextCursorFrom(last, hasNext);
+        List<PointResponse> response = points.stream().map(PointResponse::fromEntity).toList();
+        CursorMeta nextCursor = getNextCursorFrom(response, hasNext);
 
         return new CursorResponse<>(response, hasNext, nextCursor);
     }
 
-    private CursorResponse.CursorMeta getNextCursorFrom(PointResponse last, boolean hasNext) {
-        if (!hasNext) {
+    private CursorResponse.CursorMeta getNextCursorFrom(List<PointResponse> response, boolean hasNext) {
+        if (!hasNext || response.isEmpty()) {
             return null;
         }
 
+        PointResponse last = response.get(response.size() - 1);
         return CursorMeta.builder()
                 .dateTime(last.getCreatedAt())
                 .id(last.getId())
