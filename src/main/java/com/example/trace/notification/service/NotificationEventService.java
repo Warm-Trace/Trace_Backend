@@ -103,7 +103,7 @@ public class NotificationEventService {
     }
 
     private boolean canSendNotification(SourceType type, User user) {
-        NotificationSetting setting = notificationService.getSettingFrom(user.getId());
+        NotificationSetting setting = notificationService.getSettingsOf(user.getId());
         return setting.statusOf(type);
     }
 

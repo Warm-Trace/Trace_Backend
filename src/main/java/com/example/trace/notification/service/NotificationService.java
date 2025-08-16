@@ -13,6 +13,7 @@ import com.example.trace.notification.domain.SourceType;
 import com.example.trace.notification.dto.CursorNotificationResponse;
 import com.example.trace.notification.dto.CursorNotificationResponse.CursorMeta;
 import com.example.trace.notification.dto.NotificationResponse;
+import com.example.trace.notification.dto.NotificationSettingResponse;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.notification.repository.NotificationSettingRepository;
 import com.example.trace.user.User;
@@ -95,17 +96,23 @@ public class NotificationService {
 
     @Transactional
     public void turnOff(String type, Long userId) {
-        NotificationSetting setting = getSettingFrom(userId);
+        NotificationSetting setting = getSettingsOf(userId);
         setting.setNotificationEnabled(false, SourceType.fromString(type));
     }
 
     @Transactional
     public void turnOn(String type, Long userId) {
-        NotificationSetting setting = getSettingFrom(userId);
+        NotificationSetting setting = getSettingsOf(userId);
         setting.setNotificationEnabled(true, SourceType.fromString(type));
     }
 
-    public NotificationSetting getSettingFrom(Long userId) {
+    @Transactional
+    public NotificationSettingResponse getSettings(Long userId) {
+        NotificationSetting settings = getSettingsOf(userId);
+        return NotificationSettingResponse.from(settings);
+    }
+
+    public NotificationSetting getSettingsOf(Long userId) {
         User user = userRepository.getReferenceById(userId); // 프록시로 가져옴
         return notificationSettingRepository.findByUser(user).orElseGet(() -> {
             try {

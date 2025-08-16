@@ -3,6 +3,7 @@ package com.example.trace.notification.controller;
 import com.example.trace.auth.dto.PrincipalDetails;
 import com.example.trace.notification.dto.CursorNotificationResponse;
 import com.example.trace.notification.dto.NotificationResponse;
+import com.example.trace.notification.dto.NotificationSettingResponse;
 import com.example.trace.notification.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -74,5 +75,12 @@ public class NotificationController {
                                      @AuthenticationPrincipal PrincipalDetails current) {
         notificationService.turnOff(type, current.getUser().getId());
         return ResponseEntity.ok(type + "알림이 더이상 발송되지 않습니다.");
+    }
+
+    @GetMapping("/settings")
+    @Operation(summary = "알림 설정 가져오기", description = "사용자의 알림 수신 상태를 가져옵니다.")
+    public ResponseEntity<?> getSettings(@AuthenticationPrincipal PrincipalDetails current) {
+        NotificationSettingResponse response = notificationService.getSettings(current.getUser().getId());
+        return ResponseEntity.ok(response);
     }
 }
