@@ -35,24 +35,21 @@ public class NotificationService {
             UUID cursorId,
             LocalDateTime cursorDateTime,
             User user) {
-        List<NotificationEvent> notifications;
+        int fetchSize = pageSize + 1;
+        Sort sortCriteria = Sort.by("createdAt").descending().and(Sort.by("id").descending());
+        PageRequest pageable = PageRequest.of(0, fetchSize, sortCriteria);
 
-        if (cursorDateTime == null || cursorId == null) {
-            // 첫 번째 요청인 경우
-            notifications = notificationEventRepository.findFirstPage(user,
-                    PageRequest.of(0, pageSize, Sort.by("createdAt").descending().and(Sort.by("id").descending())));
-        } else {
-            // 두 번째 이후 요청
-            notifications = notificationEventRepository.findNextPage(user, cursorDateTime,
-                    cursorId,
-                    PageRequest.of(0, pageSize, Sort.by("createdAt").descending().and(Sort.by("id").descending())));
+        List<NotificationEvent> notifications = (cursorDateTime == null || cursorId == null)
+                ? notificationEventRepository.findFirstPage(user, pageable)
+                : notificationEventRepository.findNextPage(user, cursorDateTime, cursorId, pageable);
+
+        boolean hasNext = notifications.size() > pageSize;
+        if (hasNext) {
+            notifications = notifications.subList(0, pageSize);
         }
 
         List<NotificationResponse> results = notifications.stream().map(NotificationResponse::fromEntity).toList();
-
-        boolean hasNext = results.size() == pageSize;
-        NotificationResponse last = results.get(results.size() - 1);
-        CursorNotificationResponse.CursorMeta nextCursor = getNextCursorFrom(last, hasNext);
+        CursorNotificationResponse.CursorMeta nextCursor = getNextCursorFrom(results, hasNext);
 
         return new CursorNotificationResponse<>(results, hasNext, nextCursor);
     }
@@ -88,11 +85,13 @@ public class NotificationService {
         notificationEventRepository.delete(notification);
     }
 
-    private CursorNotificationResponse.CursorMeta getNextCursorFrom(NotificationResponse last, boolean hasNext) {
-        if (!hasNext) {
+    private CursorNotificationResponse.CursorMeta getNextCursorFrom(List<NotificationResponse> response,
+                                                                    boolean hasNext) {
+        if (!hasNext || response.isEmpty()) {
             return null;
         }
 
+        NotificationResponse last = response.get(response.size() - 1);
         return CursorMeta.builder()
                 .dateTime(last.getCreatedAt())
                 .id(last.getId())
