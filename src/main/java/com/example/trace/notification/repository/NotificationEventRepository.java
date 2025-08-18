@@ -1,7 +1,7 @@
 package com.example.trace.notification.repository;
 
 import com.example.trace.notification.domain.NotificationEvent;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;

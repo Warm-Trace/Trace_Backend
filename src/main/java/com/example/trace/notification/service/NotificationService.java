@@ -4,7 +4,6 @@ import static com.example.trace.global.errorcode.NotificationErrorCode.NOTIFICAT
 import static com.example.trace.global.errorcode.NotificationErrorCode.NOTIFICATION_NOT_FOUND;
 import static com.example.trace.global.errorcode.UserErrorCode.USER_NOT_FOUND;
 
-import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.global.exception.NotificationException;
 import com.example.trace.global.exception.UserException;
 import com.example.trace.notification.domain.NotificationEvent;
@@ -12,7 +11,8 @@ import com.example.trace.notification.dto.CursorNotificationResponse;
 import com.example.trace.notification.dto.CursorNotificationResponse.CursorMeta;
 import com.example.trace.notification.dto.NotificationResponse;
 import com.example.trace.notification.repository.NotificationEventRepository;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
+import com.example.trace.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;

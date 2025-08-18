@@ -1,19 +1,14 @@
 package com.example.trace.mission.repository;
 
 import com.example.trace.mission.mission.DailyMission;
-import com.example.trace.user.User;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.example.trace.user.domain.User;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface DailyMissionRepository extends JpaRepository<DailyMission, Long> {
@@ -23,11 +18,11 @@ public interface DailyMissionRepository extends JpaRepository<DailyMission, Long
 
 
     @Query("SELECT dm FROM DailyMission dm " +
-           "WHERE dm.user = :user " +
-           "AND dm.isVerified = true " +
-           "AND (:cursorDate IS NULL OR dm.createdAt < :cursorDate) " +
-           "ORDER BY dm.id DESC " +
-           "LIMIT :pageSize")
+            "WHERE dm.user = :user " +
+            "AND dm.isVerified = true " +
+            "AND (:cursorDate IS NULL OR dm.createdAt < :cursorDate) " +
+            "ORDER BY dm.id DESC " +
+            "LIMIT :pageSize")
     List<DailyMission> findVerifiedMissionsWithCursor(
             @Param("user") User user,
             @Param("cursorDate") LocalDate cursorDate,

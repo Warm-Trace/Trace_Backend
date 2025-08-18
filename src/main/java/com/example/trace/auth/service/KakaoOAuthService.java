@@ -11,7 +11,6 @@ import com.example.trace.auth.models.OIDCDecodePayload;
 import com.example.trace.auth.models.OIDCPublicKey;
 import com.example.trace.auth.models.OIDCPublicKeyResponse;
 import com.example.trace.auth.provider.KakaoOIDCProvider;
-import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.bird.Bird;
 import com.example.trace.bird.BirdLevel;
 import com.example.trace.bird.BirdRepository;
@@ -26,8 +25,13 @@ import com.example.trace.mission.mission.Mission;
 import com.example.trace.mission.repository.DailyMissionRepository;
 import com.example.trace.mission.repository.MissionRepository;
 import com.example.trace.notification.service.NotificationEventService;
-import com.example.trace.user.Role;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.Role;
+import com.example.trace.user.domain.User;
+import com.example.trace.user.repository.UserRepository;
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,11 +40,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor

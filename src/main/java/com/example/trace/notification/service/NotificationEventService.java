@@ -9,7 +9,7 @@ import com.example.trace.notification.domain.NotificationEventType;
 import com.example.trace.notification.domain.SourceType;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.post.domain.PostType;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
 import com.github.f4b6a3.uuid.UuidCreator;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
