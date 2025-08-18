@@ -1,6 +1,6 @@
 package com.example.trace.user.dto;
 
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

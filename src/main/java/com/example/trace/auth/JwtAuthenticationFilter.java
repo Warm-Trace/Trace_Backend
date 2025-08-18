@@ -4,14 +4,16 @@ package com.example.trace.auth;
 import com.example.trace.auth.Util.JwtUtil;
 import com.example.trace.auth.Util.RedisUtil;
 import com.example.trace.auth.dto.PrincipalDetails;
-import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.global.errorcode.TokenErrorCode;
 import com.example.trace.global.exception.TokenException;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
+import com.example.trace.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,9 +24,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
-
-import java.io.IOException;
-import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -96,10 +95,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // accessToken에서 providerId 추출
             String providerId = jwtUtil.getProviderId(accessToken);
             // accessToken에서 providerId로 User 객체를 가져옴
-            User user = userRepository.findByProviderIdAndProvider(providerId, "KAKAO").orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            User user = userRepository.findByProviderIdAndProvider(providerId, "KAKAO")
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
             // accesstoken을 기반으로 principalDetail 저장
             PrincipalDetails principalDetails = new PrincipalDetails(user);
-
 
             // 스프링 시큐리티 인증 토큰 생성
             Authentication authToken = new UsernamePasswordAuthenticationToken(

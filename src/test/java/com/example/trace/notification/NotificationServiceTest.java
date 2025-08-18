@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
-import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.notification.domain.NotificationEvent;
 import com.example.trace.notification.domain.NotificationEvent.NotificationData;
 import com.example.trace.notification.domain.NotificationEventType;
@@ -14,7 +13,8 @@ import com.example.trace.notification.dto.CursorNotificationResponse;
 import com.example.trace.notification.dto.NotificationResponse;
 import com.example.trace.notification.repository.NotificationEventRepository;
 import com.example.trace.notification.service.NotificationService;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
+import com.example.trace.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -56,7 +56,7 @@ class NotificationServiceTest {
         event.mapToUser(user);
 
         //when
-        when(notificationEventRepository.findFirstPage(user, PageRequest.of(0, size,
+        when(notificationEventRepository.findFirstPage(user, PageRequest.of(0, size + 1,
                 Sort.by("createdAt").descending().and(Sort.by("id").descending()))))
                 .thenReturn(List.of(event));
 

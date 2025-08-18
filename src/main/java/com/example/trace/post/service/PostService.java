@@ -9,10 +9,9 @@ import com.example.trace.post.dto.post.PostCreateDto;
 import com.example.trace.post.dto.post.PostDto;
 import com.example.trace.post.dto.post.PostFeedDto;
 import com.example.trace.post.dto.post.PostUpdateDto;
-import com.example.trace.user.User;
-import org.springframework.web.multipart.MultipartFile;
-
+import com.example.trace.user.domain.User;
 import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface PostService {
 

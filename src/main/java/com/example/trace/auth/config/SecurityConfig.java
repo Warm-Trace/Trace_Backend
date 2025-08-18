@@ -3,7 +3,7 @@ package com.example.trace.auth.config;
 import com.example.trace.auth.JwtAuthenticationFilter;
 import com.example.trace.auth.Util.JwtUtil;
 import com.example.trace.auth.Util.RedisUtil;
-import com.example.trace.auth.repository.UserRepository;
+import com.example.trace.user.repository.UserRepository;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

@@ -1,13 +1,12 @@
 package com.example.trace.report.repository;
 
 import com.example.trace.report.domain.UserBlock;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
 import feign.Param;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 public interface UserBlockRepository extends JpaRepository<UserBlock, Long> {
     Optional<UserBlock> findByBlockerAndBlocked(User blocker, User blocked);

@@ -1,9 +1,9 @@
 package com.example.trace.emotion;
 
+import com.example.trace.auth.dto.PrincipalDetails;
 import com.example.trace.emotion.dto.EmotionRequest;
 import com.example.trace.emotion.dto.EmotionResponse;
-import com.example.trace.auth.dto.PrincipalDetails;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,7 +11,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/emotion")
@@ -20,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class EmotionController {
 
     private final EmotionService emotionServcice;
+
     @PostMapping("/{postId}")
     @Operation(
             summary = "게시물 감정 표현",
@@ -41,7 +46,7 @@ public class EmotionController {
         User user = principalDetails.getUser();
         EmotionType type = request.getEmotionType();
 
-        EmotionResponse emotionResponse = emotionServcice.toggleEmotion(postId,user, type);
+        EmotionResponse emotionResponse = emotionServcice.toggleEmotion(postId, user, type);
         return emotionResponse;
     }
 

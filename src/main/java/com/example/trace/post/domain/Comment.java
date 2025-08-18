@@ -1,6 +1,6 @@
 package com.example.trace.post.domain;
 
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

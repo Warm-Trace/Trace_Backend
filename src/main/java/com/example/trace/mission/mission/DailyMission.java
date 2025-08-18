@@ -1,16 +1,23 @@
 package com.example.trace.mission.mission;
 
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-
-import jakarta.persistence.*;
-import java.time.LocalDate;
-import java.time.ZoneId;
 
 @Entity
 @AllArgsConstructor
@@ -38,7 +45,7 @@ public class DailyMission {
     @Column(nullable = false)
     private int changeCount;
 
-    @Column(name="is_verified")
+    @Column(name = "is_verified")
     private boolean isVerified;
 
     @Column(name = "post_id")
@@ -54,14 +61,12 @@ public class DailyMission {
         createdAt = LocalDate.now(ZoneId.of("Asia/Seoul"));
     }
 
-    public void updateVerification(boolean isVerified,Long postId){
+    public void updateVerification(boolean isVerified, Long postId) {
         this.isVerified = isVerified;
-        if (isVerified){
+        if (isVerified) {
             this.postId = postId;
         }
     }
-
-
 
 
 }

@@ -1,8 +1,12 @@
 package com.example.trace.user.dto;
 
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,7 +23,7 @@ public class UserDto {
     @Schema(description = "이메일")
     String email;
     @Schema(description = "선행 점수")
-    Long verificationScore;
+    Long pointBalance;
     @Schema(description = "선행 인증 개수")
     Long verificationCount;
 
@@ -28,7 +32,7 @@ public class UserDto {
                 .nickname(user.getNickname())
                 .profileImageUrl(user.getProfileImageUrl())
                 .email(user.getEmail())
-                .verificationScore(user.getVerificationScore())
+                .pointBalance(user.getPointBalance())
                 .verificationCount(user.getVerifiedPostCount() + user.getCompletedMissionCount())
                 .build();
     }

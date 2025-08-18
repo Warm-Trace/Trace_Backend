@@ -1,6 +1,5 @@
 package com.example.trace.post.service;
 
-import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.bird.BirdLevel;
 import com.example.trace.bird.BirdService;
 import com.example.trace.emotion.EmotionService;
@@ -28,7 +27,8 @@ import com.example.trace.post.dto.post.PostFeedDto;
 import com.example.trace.post.dto.post.PostUpdateDto;
 import com.example.trace.post.repository.PostImageRepository;
 import com.example.trace.post.repository.PostRepository;
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
+import com.example.trace.user.repository.UserRepository;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;

@@ -1,27 +1,35 @@
 package com.example.trace.user;
 
 
+import static com.example.trace.global.errorcode.UserErrorCode.POINT_NOT_GRANTED;
+import static com.example.trace.global.errorcode.UserErrorCode.USER_NOT_FOUND;
+
 import com.example.trace.auth.Util.JwtUtil;
 import com.example.trace.auth.Util.RedisUtil;
-import com.example.trace.auth.repository.UserRepository;
 import com.example.trace.global.errorcode.TokenErrorCode;
 import com.example.trace.global.errorcode.UserErrorCode;
 import com.example.trace.global.exception.TokenException;
 import com.example.trace.global.exception.UserException;
+import com.example.trace.point.PointRepository;
+import com.example.trace.point.PointService;
+import com.example.trace.point.PointSource;
 import com.example.trace.report.domain.UserBlock;
 import com.example.trace.report.repository.UserBlockRepository;
+import com.example.trace.user.domain.AttendanceDay;
+import com.example.trace.user.domain.User;
+import com.example.trace.user.dto.AttendanceResponse;
 import com.example.trace.user.dto.BlockedUserProfileDto;
 import com.example.trace.user.dto.UpdateNickNameRequest;
 import com.example.trace.user.dto.UserDto;
 import com.example.trace.user.dto.UserVerificationInfo;
+import com.example.trace.user.repository.AttendanceRepository;
+import com.example.trace.user.repository.UserRepository;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static com.example.trace.global.errorcode.UserErrorCode.USER_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +38,9 @@ public class UserService {
     private final UserBlockRepository userBlockRepository;
     private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
+    private final AttendanceRepository attendanceRepository;
+    private final PointRepository pointRepository;
+    private final PointService pointService;
 
     /**
      * providerId로 사용자 정보를 조회합니다.
@@ -107,5 +118,41 @@ public class UserService {
 
     public UserVerificationInfo getUserVerificationInfo(User user) {
         return UserVerificationInfo.from(user);
+    }
+
+    @Transactional
+    public AttendanceResponse attend(User user) {
+        LocalDate today = LocalDate.now();
+        Long userId = user.getId();
+
+        int inserted = attendanceRepository.insertIfAbsent(userId, today);
+        long pointsAdded = 0;
+
+        boolean isNewCheckin = (inserted == 1);
+        if (isNewCheckin) {
+            // 중복 포인트 제공 방지
+            AttendanceDay attendanceDay = attendanceRepository.findByUserIdAndAttDate(userId, today)
+                    .orElseThrow(() -> new UserException(POINT_NOT_GRANTED));
+            boolean given = pointRepository.findByAttendanceDay(attendanceDay).isPresent();
+
+            if (!given) {
+                // 포인트 지급
+                user.getPoint(PointSource.ATTENDANCE.getBasePoints());
+                pointsAdded = pointService.grantAttendancePoint(user, attendanceDay);
+            }
+        }
+
+        userRepository.save(user);
+        Long balance = userRepository.getBalance(user.getId());
+
+        return new AttendanceResponse(today, true, pointsAdded, balance);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean getTodayAttendance(Long userId) {
+        LocalDate today = LocalDate.now();
+        boolean attended = attendanceRepository.findByUserIdAndAttDate(userId, today).isPresent();
+
+        return attended;
     }
 }

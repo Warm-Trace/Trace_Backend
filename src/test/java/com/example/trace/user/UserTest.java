@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.example.trace.gpt.dto.VerificationDto;
 import com.example.trace.post.domain.PostType;
+import com.example.trace.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -23,7 +24,7 @@ class UserTest {
         user.updateVerification(verificationDto, PostType.MISSION);
 
         //then
-        assertEquals(150L, user.getVerificationScore());
+        assertEquals(150L, user.getPointBalance());
     }
 
     @DisplayName("미션 인증 시 확득 포인트")
@@ -40,7 +41,7 @@ class UserTest {
         user.updateVerification(verificationDto, PostType.MISSION);
 
         //then
-        assertEquals(300L, user.getVerificationScore());
+        assertEquals(300L, user.getPointBalance());
     }
 
     @DisplayName("이미지를 포함한 선행 인증 시 획득 포인트")
@@ -57,7 +58,7 @@ class UserTest {
         user.updateVerification(verificationDto, PostType.GOOD_DEED);
 
         //then
-        assertEquals(50L, user.getVerificationScore());
+        assertEquals(50L, user.getPointBalance());
     }
 
     @DisplayName("이미지를 포함한 선행 인증 시 획득 포인트")
@@ -74,6 +75,6 @@ class UserTest {
         user.updateVerification(verificationDto, PostType.GOOD_DEED);
 
         //then
-        assertEquals(100L, user.getVerificationScore());
+        assertEquals(100L, user.getPointBalance());
     }
 }

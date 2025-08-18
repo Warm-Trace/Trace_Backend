@@ -27,7 +27,7 @@ public class PointResponse {
                 .id(point.getId())
                 .amount(point.getAmount())
                 .createdAt(point.getCreatedAt())
-                .postId(point.getPost().getId())
+                .postId(point.getPost() != null ? point.getPost().getId() : null)
                 .content(point.getContent())
                 .source(point.getSource())
                 .build();
