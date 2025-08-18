@@ -20,8 +20,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +45,12 @@ import org.jetbrains.annotations.NotNull;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "notification_event",
+        indexes = {
+                @Index(name = "idx_notif_user_created", columnList = "user_id, created_at, id"), // 최신순 정렬
+                @Index(name = "idx_notif_user_ref_type", columnList = "user_id, ref_id, source_type") // 알림 횟수 제한
+        }
+)
 public class NotificationEvent implements Comparable<NotificationEvent> {
     @Id
     @Column(columnDefinition = "BINARY(16)")

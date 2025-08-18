@@ -1,6 +1,7 @@
 package com.example.trace.notification.repository;
 
 import com.example.trace.notification.domain.NotificationEvent;
+import com.example.trace.notification.domain.SourceType;
 import com.example.trace.user.domain.User;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,4 +31,17 @@ public interface NotificationEventRepository extends JpaRepository<NotificationE
             @Param("cursorId") UUID cursorId,
             Pageable pageable
     );
+
+    @org.springframework.data.jpa.repository.QueryHints(
+            value = @jakarta.persistence.QueryHint(
+                    name = "org.hibernate.comment",
+                    value = "송신 알림 개수 체크: userId+refId+sourceType"
+            )
+    )
+    @Query(value = """
+                    SELECT COUNT(*) FROM NotificationEvent n
+                    WHERE n.user.id = :user_id AND n.refId = :ref_id AND n.sourceType = :source_type
+            """)
+    long countByUserIdAndRefIdAndSourceType(@Param("user_id") Long userId, @Param("ref_id") Long postId,
+                                            @Param("source_type") SourceType sourceType);
 }
