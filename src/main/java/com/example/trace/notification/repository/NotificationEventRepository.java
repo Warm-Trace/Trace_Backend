@@ -14,9 +14,21 @@ import org.springframework.data.repository.query.Param;
 public interface NotificationEventRepository extends JpaRepository<NotificationEvent, UUID> {
     List<NotificationEvent> findAllByRefIdAndUser(Long refId, User user);
 
+    @org.springframework.data.jpa.repository.QueryHints(
+            value = @jakarta.persistence.QueryHint(
+                    name = "org.hibernate.comment",
+                    value = "모든 알림 가져오기(first)"
+            )
+    )
     @Query("SELECT n FROM NotificationEvent n WHERE n.user = :user ORDER BY n.createdAt DESC, n.id DESC")
     List<NotificationEvent> findFirstPage(@Param("user") User user, Pageable pageable);
 
+    @org.springframework.data.jpa.repository.QueryHints(
+            value = @jakarta.persistence.QueryHint(
+                    name = "org.hibernate.comment",
+                    value = "모든 알림 가져오기(next)"
+            )
+    )
     @Query("""
                 SELECT n FROM NotificationEvent n
                 WHERE n.user = :user AND (
