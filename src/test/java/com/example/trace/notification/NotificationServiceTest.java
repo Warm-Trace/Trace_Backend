@@ -56,7 +56,7 @@ class NotificationServiceTest {
         event.mapToUser(user);
 
         //when
-        when(notificationEventRepository.findFirstPage(user, PageRequest.of(0, size,
+        when(notificationEventRepository.findFirstPage(user, PageRequest.of(0, size + 1,
                 Sort.by("createdAt").descending().and(Sort.by("id").descending()))))
                 .thenReturn(List.of(event));
 

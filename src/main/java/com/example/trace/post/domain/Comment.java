@@ -76,4 +76,7 @@ public class Comment {
         this.isDeleted = true;
     }
 
+    public boolean isOwner(User other) {
+        return this.user.getId().equals(other.getId());
+    }
 }
