@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class NotificationEventService {
+    private static final int MAX_NOTIFICATION_COUNT = 3;
 
     private final FcmTokenNotificationService fcmTokenNotificationService;
     private final NotificationEventRepository notificationEventRepository;
@@ -109,7 +110,7 @@ public class NotificationEventService {
 
     private boolean isOverLimit(Long userId, Long postId, SourceType type) {
         long count = notificationEventRepository.countByUserIdAndRefIdAndSourceType(userId, postId, type);
-        return count > 3;
+        return count >= MAX_NOTIFICATION_COUNT;
     }
 
     //TODO(gyunho): 30일 지나면 삭제하는 기능 추가
