@@ -21,13 +21,14 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class NotificationEventService {
+    private static final int MAX_NOTIFICATION_COUNT = 3;
 
     private final FcmTokenNotificationService fcmTokenNotificationService;
     private final NotificationEventRepository notificationEventRepository;
     private final NotificationService notificationService;
 
     public NotificationData sendDailyMissionAssignedNotification(User user, Mission mission) {
-        if (!canSendNotification(SourceType.MISSION, user)) {
+        if (!isAllowedStatus(SourceType.MISSION, user)) {
             return NotificationData.builder().build();
         }
         String providerId = user.getProviderId();
@@ -46,7 +47,7 @@ public class NotificationEventService {
     }
 
     public void sendCommentNotification(User user, Long postId, PostType postType, String commentContent) {
-        if (!canSendNotification(SourceType.COMMENT, user)) {
+        if (!isAllowedStatus(SourceType.COMMENT, user)) {
             return;
         }
         NotificationEvent.NotificationData data = NotificationData.builder()
@@ -68,7 +69,7 @@ public class NotificationEventService {
             PostType postType,
             EmotionType emotionType,
             String nickName) {
-        if (!canSendNotification(SourceType.EMOTION, user)) {
+        if (!isAllowedStatus(SourceType.EMOTION, user) || isOverLimit(user.getId(), postId, SourceType.EMOTION)) {
             return;
         }
         NotificationEvent.NotificationData data = NotificationData.builder()
@@ -102,9 +103,14 @@ public class NotificationEventService {
         notificationEventRepository.save(event);
     }
 
-    private boolean canSendNotification(SourceType type, User user) {
+    private boolean isAllowedStatus(SourceType type, User user) {
         NotificationSetting setting = notificationService.getSettingsOf(user.getId());
         return setting.statusOf(type);
+    }
+
+    private boolean isOverLimit(Long userId, Long postId, SourceType type) {
+        long count = notificationEventRepository.countByUserIdAndRefIdAndSourceType(userId, postId, type);
+        return count >= MAX_NOTIFICATION_COUNT;
     }
 
     //TODO(gyunho): 30일 지나면 삭제하는 기능 추가
