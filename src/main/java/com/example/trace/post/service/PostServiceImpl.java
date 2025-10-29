@@ -1,78 +1,116 @@
 package com.example.trace.post.service;
 
-import com.example.trace.gpt.dto.PostVerificationResult;
-import com.example.trace.gpt.service.PostVerificationService;
-import com.example.trace.user.User;
+import com.example.trace.bird.BirdLevel;
+import com.example.trace.bird.BirdService;
+import com.example.trace.emotion.EmotionService;
+import com.example.trace.emotion.EmotionType;
+import com.example.trace.emotion.dto.EmotionCountDto;
 import com.example.trace.file.FileType;
 import com.example.trace.file.S3UploadService;
-import com.example.trace.post.dto.PostUpdateDto;
+import com.example.trace.global.errorcode.PostErrorCode;
+import com.example.trace.global.exception.PostException;
+import com.example.trace.global.response.CursorResponse;
+import com.example.trace.gpt.domain.Verification;
+import com.example.trace.gpt.dto.VerificationDto;
+import com.example.trace.gpt.service.PostVerificationService;
+import com.example.trace.point.PointService;
 import com.example.trace.post.domain.Post;
 import com.example.trace.post.domain.PostImage;
-import com.example.trace.post.dto.PostCreateDto;
-import com.example.trace.post.dto.PostDto;
-import com.example.trace.auth.repository.UserRepository;
+import com.example.trace.post.domain.PostType;
+import com.example.trace.post.domain.cursor.SearchType;
+import com.example.trace.post.dto.cursor.MyPagePostRequest;
+import com.example.trace.post.dto.cursor.PostFeedRequest;
+import com.example.trace.post.dto.cursor.PostSearchRequest;
+import com.example.trace.post.dto.post.PostCreateDto;
+import com.example.trace.post.dto.post.PostDto;
+import com.example.trace.post.dto.post.PostFeedDto;
+import com.example.trace.post.dto.post.PostUpdateDto;
 import com.example.trace.post.repository.PostImageRepository;
 import com.example.trace.post.repository.PostRepository;
+import com.example.trace.user.domain.User;
+import com.example.trace.user.repository.UserRepository;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class PostServiceImpl implements PostService {
+
+    private static final int MAX_IMAGES = 5;
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final S3UploadService s3UploadService;
     private final PostVerificationService postVerificationService;
-
-    private static final int MAX_IMAGES = 5;
-
-    @Override
-    @Transactional
-    public PostDto createPost(PostCreateDto postCreateDto,Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-
-        Post post = Post.builder()
-                .title(postCreateDto.getTitle())
-                .content(postCreateDto.getContent())
-                .user(user)
-                .build();
-
-        Post savedPost = postRepository.save(post);
-        return PostDto.fromEntity(savedPost);
-    }
-
+    private final EmotionService emotionService;
+    private final PostImageRepository postImageRepository;
+    private final BirdService birdService;
+    private final PointService pointService;
 
     @Override
     @Transactional
-    public PostDto createPostWithPictures(PostCreateDto postCreateDto, Long userId, String ProviderId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+    public PostDto createPost(PostCreateDto postCreateDto, String ProviderId, VerificationDto verificationDto) {
+        User user = userRepository.findByProviderId(ProviderId)
+                .orElseThrow(() -> new PostException(PostErrorCode.USER_NOT_FOUND));
+        PostType postType = postCreateDto.getPostType();
+
+        boolean isLevelUp = false;
+        BirdLevel birdLevel = null;
+        Verification verification = null;
+
+        if (verificationDto != null) {
+            verification = verificationDto.toEntity();
+            user.updateVerification(verificationDto, postType);
+            birdLevel = birdService.checkAndUnlockBirdLevel(user).orElse(null);
+            if (birdLevel != null) {
+                isLevelUp = true;
+            }
+        }
+
+        if (postCreateDto.getContent() == null || postCreateDto.getContent().isEmpty()) {
+            throw new PostException(PostErrorCode.CONTENT_EMPTY);
+        }
+
+        if (postCreateDto.getTitle() == null || postCreateDto.getTitle().isEmpty()) {
+            throw new PostException(PostErrorCode.TITLE_EMPTY);
+        }
 
         Post post = Post.builder()
+                .postType(postCreateDto.getPostType())
+                .viewCount(0L)
                 .title(postCreateDto.getTitle())
                 .content(postCreateDto.getContent())
                 .user(user)
+                .verification(verification)
+                .missionContent(
+                        postCreateDto.getPostType() == PostType.MISSION ? postCreateDto.getMissionContent() : null)
                 .build();
-        
+
         Post savedPost = postRepository.save(post);
 
+        if (verification != null) {
+            verification.connectToPost(post);
+            pointService.grantPointForPost(savedPost, user, verificationDto);
+        }
+
+        // TODO(seobeeeee1001): 이미지 업로드 로직 분리
         List<MultipartFile> imageFiles = postCreateDto.getImageFiles();
         if (imageFiles != null && !imageFiles.isEmpty()) {
             int imagesToProcess = Math.min(imageFiles.size(), MAX_IMAGES);
-            
+
             for (int i = 0; i < imagesToProcess; i++) {
                 MultipartFile file = imageFiles.get(i);
+                log.info("Processing image file: {}", file.getOriginalFilename());
                 try {
                     String imageUrl = s3UploadService.saveFile(file, FileType.POST, ProviderId);
-                    
                     PostImage postImage = PostImage.builder()
                             .post(savedPost)
                             .imageUrl(imageUrl)
@@ -80,34 +118,168 @@ public class PostServiceImpl implements PostService {
                             .build();
                     savedPost.addImage(postImage);
                 } catch (Exception e) {
-                    throw new RuntimeException("파일 업로드에 실패했습니다: " + e.getMessage());
+                    throw new PostException(PostErrorCode.POST_IMAGE_UPLOAD_FAILED);
                 }
             }
         }
-        
-        return PostDto.fromEntity(savedPost);
+
+        PostDto postDto = PostDto.fromEntity(savedPost);
+        postDto.addLevelUpInfo(birdLevel, isLevelUp);
+
+        return postDto;
     }
 
     @Override
     @Transactional
-    public PostDto getPostById(Long id) {
-        Post post = postRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
-        return PostDto.fromEntity(post);
+    public PostDto getPostById(Long postId, User requestUser) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND));
+
+        post.incrementViewCount();
+
+        EmotionCountDto emotionCountDto = emotionService.getEmotionCountsByType(postId);
+
+        EmotionType yourEmotionType = emotionService.getYourEmotion(postId, requestUser);
+
+        PostDto postDto = PostDto.fromEntity(post);
+
+        postDto.setEmotionCount(emotionCountDto);
+        postDto.setOwner(post.getUser().getProviderId().equals(requestUser.getProviderId()));
+        postDto.setYourEmotionType(yourEmotionType);
+
+        return postDto;
     }
 
-    @Override
-    @Transactional
-    public PostDto updatePost(Long id, PostUpdateDto postUpdateDto, Long userId) {
-        Post post = postRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
-        
-        if (!post.getUser().getId().equals(userId)) {
-            throw new AccessDeniedException("게시글을 수정할 권한이 없습니다.");
+
+    @Transactional(readOnly = true)
+    public CursorResponse<PostFeedDto> getAllPostsWithCursor(PostFeedRequest request, String providerId) {
+        // 커서 요청 처리
+        int size = request.getSize() != null ? request.getSize() : 10;
+
+        // 게시글 조회
+        List<PostFeedDto> posts;
+        if (request.getCursorDateTime() == null || request.getCursorId() == null) {
+            // 첫 페이지 조회
+            posts = postRepository.findPostsWithCursor(null, null, size + 1, request.getPostType(), providerId);
+        } else {
+            // 다음 페이지 조회
+            posts = postRepository.findPostsWithCursor(
+                    request.getCursorDateTime(), request.getCursorId(), size + 1, request.getPostType(), providerId);
         }
-        
-        post.setTitle(postUpdateDto.getTitle());
-        post.setContent(postUpdateDto.getContent());
+
+        // 다음 페이지 여부 확인
+        boolean hasNext = false;
+        if (posts.size() > size) {
+            hasNext = true;
+            posts = posts.subList(0, size);
+        }
+
+        // 커서 메타데이터 생성
+        CursorResponse.CursorMeta nextCursor = null;
+        if (!posts.isEmpty() && hasNext) {
+            PostFeedDto lastPost = posts.get(posts.size() - 1);
+            nextCursor = CursorResponse.CursorMeta.builder()
+                    .dateTime(lastPost.getCreatedAt())
+                    .id(lastPost.getPostId())
+                    .build();
+        }
+
+        // 응답 생성
+        return CursorResponse.<PostFeedDto>builder()
+                .content(posts)
+                .hasNext(hasNext)
+                .cursor(nextCursor)
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CursorResponse<PostFeedDto> searchPostsWithCursor(PostSearchRequest request, String providerId) {
+        int size = request.getSize() != null ? request.getSize() : 10;
+
+        // 검색어가 있는 경우 검색 메서드 사용, 없으면 기존 메서드 사용
+        List<PostFeedDto> posts;
+
+        if (request.getKeyword() != null && !request.getKeyword().trim().isEmpty()) {
+            String keyword = request.getKeyword().trim();
+
+            // 검색어 길이 검증
+            validateKeyword(keyword);
+
+            // 검색 기능 사용
+            posts = postRepository.findPostsWithCursorAndSearch(
+                    request.getCursorDateTime(),
+                    request.getCursorId(),
+                    size + 1,
+                    request.getPostType(),
+                    keyword,
+                    request.getSearchType() != null ? request.getSearchType() : SearchType.ALL,
+                    providerId
+            );
+        } else {
+            // 기존 일반 조회 기능 사용
+            posts = postRepository.findPostsWithCursor(
+                    request.getCursorDateTime(),
+                    request.getCursorId(),
+                    size + 1,
+                    request.getPostType(),
+                    providerId
+            );
+        }
+
+        boolean hasNext = false;
+        if (posts.size() > size) {
+            hasNext = true;
+            posts = posts.subList(0, size);
+        }
+
+        CursorResponse.CursorMeta nextCursor = null;
+        if (!posts.isEmpty() && hasNext) {
+            PostFeedDto lastPost = posts.get(posts.size() - 1);
+            nextCursor = CursorResponse.CursorMeta.builder()
+                    .dateTime(lastPost.getCreatedAt())
+                    .id(lastPost.getPostId())
+                    .build();
+        }
+
+        return CursorResponse.<PostFeedDto>builder()
+                .content(posts)
+                .hasNext(hasNext)
+                .cursor(nextCursor)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public PostDto updatePost(Long id, PostUpdateDto postUpdateDto, List<MultipartFile> imageFiles, String providerId) {
+        List<String> removal = postUpdateDto.getRemoval();
+        List<PostImage> images = new ArrayList<>();
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND));
+
+        if (!post.isOwner(providerId)) {
+            throw new PostException(PostErrorCode.POST_UPDATE_FORBIDDEN);
+        }
+
+        if (removal != null && !removal.isEmpty()) {
+            s3UploadService.deleteFiles(removal); // S3에서 이미지 삭제
+            post.getImages().removeIf(image -> removal.contains(image.getImageUrl())); // DB에서 이미지 행 삭제
+        }
+
+        if (imageFiles != null && !imageFiles.isEmpty()) {
+            try {
+                // 추가할 이미지를 s3에 업로드 후 이미지 링크들을 리스트로 받아옴
+                List<String> savedImageUrls = s3UploadService.savePostFiles(imageFiles, FileType.POST, providerId);
+                images = postImageRepository.saveAll(PostImage.listOf(savedImageUrls, post));
+
+                log.info("새로 업로드된 이미지 개수: {}, URL 목록: {}",
+                        images.size(), images.stream().map(PostImage::getImageUrl).toList());
+            } catch (IOException e) {
+                throw new PostException(PostErrorCode.POST_IMAGE_UPLOAD_FAILED);
+            }
+        }
+
+        post.editPost(postUpdateDto.getTitle(), postUpdateDto.getContent(), images);
 
         Post updatedPost = postRepository.save(post);
         return PostDto.fromEntity(updatedPost);
@@ -115,24 +287,92 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public void deletePost(Long id, Long userId) {
+    public void deletePost(Long id, String providerId) {
         Post post = postRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
-        
-        if (!post.getUser().getId().equals(userId)) {
-            throw new AccessDeniedException("게시글을 삭제할 권한이 없습니다.");
+                .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND));
+
+        if (!post.getUser().getProviderId().equals(providerId)) {
+            throw new PostException(PostErrorCode.POST_DELETE_FORBIDDEN);
         }
-        
         postRepository.delete(post);
+    }
+
+
+    private void validateKeyword(String keyword) {
+        if (keyword.length() < 2) {
+            throw new PostException(PostErrorCode.INVALID_KEYWORD_LENGTH);
+        }
+
+        if (keyword.length() > 50) {
+            throw new PostException(PostErrorCode.KEYWORD_TOO_LONG);
+        }
+
+        // 추가적인 검증 로직
+        // 특수문자만으로 구성된 검색어 제한
+        if (keyword.matches("^[^a-zA-Z0-9가-힣\\s]+$")) {
+            throw new PostException(PostErrorCode.KEYWORD_TOO_LONG);
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PostVerificationResult verifyPost(Long postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
+    public CursorResponse<PostFeedDto> getMyPagePostsWithCursor(MyPagePostRequest request, String providerId) {
+        int size = request.getSize() != null ? request.getSize() : 10;
+        List<PostFeedDto> posts;
 
-        return postVerificationService.verifyPost(post);
+        switch (request.getMyPageTab()) {
+            case WRITTEN_POSTS:
+                posts = postRepository.findUserPosts(
+                        providerId,
+                        request.getCursorDateTime(),
+                        request.getCursorId(),
+                        size + 1
+                );
+                break;
+            case COMMENTED_POSTS:
+                posts = postRepository.findUserCommentedPosts(
+                        providerId,
+                        request.getCursorDateTime(),
+                        request.getCursorId(),
+                        size + 1
+                );
+                break;
+            case REACTED_POSTS:
+                posts = postRepository.findUserEmotedPosts(
+                        providerId,
+                        request.getCursorDateTime(),
+                        request.getCursorId(),
+                        size + 1
+                );
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid MyPageTab type");
+        }
+
+        // 다음 페이지 여부 확인
+        boolean hasNext = false;
+        if (posts.size() > size) {
+            hasNext = true;
+            posts = posts.subList(0, size);
+        }
+
+        // 커서 메타데이터 생성
+        CursorResponse.CursorMeta nextCursor = null;
+        if (!posts.isEmpty() && hasNext) {
+            PostFeedDto lastPost = posts.get(posts.size() - 1);
+            nextCursor = CursorResponse.CursorMeta.builder()
+                    .dateTime(lastPost.getCreatedAt())
+                    .id(lastPost.getPostId())
+                    .build();
+        }
+
+        // 응답 생성
+        return CursorResponse.<PostFeedDto>builder()
+                .content(posts)
+                .hasNext(hasNext)
+                .cursor(nextCursor)
+                .build();
     }
+
 
 }

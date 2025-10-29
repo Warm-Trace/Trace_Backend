@@ -1,22 +1,32 @@
 package com.example.trace.post.service;
 
-import com.example.trace.gpt.dto.PostVerificationResult;
-import com.example.trace.post.dto.PostUpdateDto;
-import com.example.trace.post.dto.PostCreateDto;
-import com.example.trace.post.dto.PostDto;
-
+import com.example.trace.global.response.CursorResponse;
+import com.example.trace.gpt.dto.VerificationDto;
+import com.example.trace.post.dto.cursor.MyPagePostRequest;
+import com.example.trace.post.dto.cursor.PostFeedRequest;
+import com.example.trace.post.dto.cursor.PostSearchRequest;
+import com.example.trace.post.dto.post.PostCreateDto;
+import com.example.trace.post.dto.post.PostDto;
+import com.example.trace.post.dto.post.PostFeedDto;
+import com.example.trace.post.dto.post.PostUpdateDto;
+import com.example.trace.user.domain.User;
+import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface PostService {
-    
-    PostDto createPost(PostCreateDto postCreateDto,Long userId);
 
-    PostDto createPostWithPictures(PostCreateDto postCreateDto,Long userId, String ProviderId);
+    PostDto createPost(PostCreateDto postCreateDto, String ProviderId, VerificationDto verificationDto);
 
-    PostDto getPostById(Long id);
+    PostDto getPostById(Long id, User user);
 
-    PostDto updatePost(Long id, PostUpdateDto postUpdateDto,Long userId);
-    
-    void deletePost(Long id, Long userId);
-    
-    PostVerificationResult verifyPost(Long postId);
+    PostDto updatePost(Long id, PostUpdateDto postUpdateDto, List<MultipartFile> imageFiles, String providerId);
+
+    CursorResponse<PostFeedDto> getAllPostsWithCursor(PostFeedRequest request, String requesterId);
+
+    void deletePost(Long id, String providerId);
+
+    CursorResponse<PostFeedDto> searchPostsWithCursor(PostSearchRequest request, String providerId);
+
+    CursorResponse<PostFeedDto> getMyPagePostsWithCursor(MyPagePostRequest request, String providerId);
+
 } 

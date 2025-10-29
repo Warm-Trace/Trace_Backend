@@ -1,14 +1,14 @@
 package com.example.trace.auth.dto;
 
 
-import com.example.trace.user.User;
+import com.example.trace.user.domain.User;
+import java.util.Collection;
+import java.util.Collections;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.stream.Collectors;
 @Getter
 public class PrincipalDetails implements UserDetails {
 
@@ -19,14 +19,13 @@ public class PrincipalDetails implements UserDetails {
     }
 
 
-
     // 해당 User의 권한을 리턴 하는 곳
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return user.getRoleList().stream()
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
+        // User 객체에서 role 정보를 가져와 GrantedAuthority 컬렉션으로 변환
+        return Collections.singletonList(new SimpleGrantedAuthority(user.getRole().getKey()));
     }
+
 
     @Override
     public String getPassword() {

@@ -1,50 +1,67 @@
-# 애플리케이션 기본 설정
+# 애플리케이션 기본 설정 
+# CICD 테스트
 spring:
   application:
     name: Trace
-  
-  # 프로필 설정 (개발 환경 기본)
   profiles:
-    active: dev
-  
-  # JPA 설정
+    active: ${SPRING_PROFILES_ACTIVE}
   jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
     properties:
       hibernate:
-        format_sql: true
-        use_sql_comments: true
-  
-  # SQL 초기화 설정 비활성화
-  sql:
-    init:
-      mode: never
-  
-  # JWT 설정
-  jwt:
-    secret: ${JWT_SECRET}
-    token:
-      access-expiration-time: 3600000  # 1시간
-      refresh-expiration-time: 604800000  # 7일
-  
-  # Redis 설정
-  data:
-    redis:
-      host: localhost
-      port: 6379
+        jdbc:
+          time_zone: Asia/Seoul
+        timezone:
+          default_storage: NORMALIZE
+        session:
+          events:
+            log:
+              LOGGING_LEVEL_SESSION: TRACE
+        connection:
+          timezone: Asia/Seoul
+  # 한국 시간대 설정 추가
+  jackson:
+    time-zone: Asia/Seoul
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
 
-# 서버 설정
-server:
-  port: 8080
-  servlet:
-    context-path: /api/v1
-  error:
-    include-message: always
-    include-binding-errors: always
-    include-stacktrace: never
-    include-exception: false
+# AWS S3 설정
+cloud:
+  aws:
+    s3:
+      bucket: wap-trace-bucket
+    region:
+      static: ap-northeast-2
+      auto: false
+    stack:
+      auto: false
+
+# SpringDoc 설정 추가
+springdoc:
+  version: '1.0'
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  show-actuator: false
+  paths-to-match:
+    - /token/**
+    - /auth/**
+    - /posts/**
+    - /emotion/**
+    - /user/**
+    - /verification/**
+    - /comments/**
+    - /missions/**
+    - /fcm/**
+    - /reports/**
+    - /admin/reports/**
+    - /notifications/**
+    - /points/**
 
 # OAuth2 클라이언트 설정 - API 키 관리, 외부에 노출되면 안 됨
 oauth2:
@@ -56,22 +73,111 @@ oauth2:
       kakao:
         jwks-uri: https://kauth.kakao.com/.well-known/jwks.json
 
+# JWT 설정
+jwt:
+  secret: ${JWT_SECRET}
+  token:
+    access-expiration-time: 3600000  # 1시간
+    refresh-expiration-time: 604800000  # 7일
+
 # 로깅 설정
 logging:
+  charset:
+    console: UTF-8
+    file: UTF-8
   level:
-    root: INFO
-    org.springframework.web: INFO
-    org.hibernate: INFO
-    com.example.trace: DEBUG
-    org.springframework.security: INFO
+    root: WARN
+    org.springframework.web: WARN
+    org.hibernate: WARN
+    com.example.trace: DEBUG                    # 기본 INFO
+    com.example.trace.fcm: DEBUG               # FCM만 DEBUG
+    org.springframework.security: WARN
 
-# 커스텀 애플리케이션 설정
-app:
-  base-url: http://localhost:8080/api/v1
-  cors:
-    allowed-origins: http://localhost:3000, http://localhost:8080
-  upload:
-    dir: ${user.home}/trace/uploads
+firebase:
+  config-path: firebase/firebase_service_key.json
+
+---
+# 운영 환경 설정
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST}:3306/ebdb?serverTimezone=Asia/Seoul&connectionTimeZone=Asia/Seoul&forceConnectionTimeZoneToSession=true&useLegacyDatetimeCode=false
+    username: ebroot
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+      connection-timeout: 30000
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: false
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        jdbc:
+          time_zone: Asia/Seoul
+          batch_size: 20
+        timezone:
+          default_storage: NORMALIZE
+        type:
+          preferred_instant_jdbc_type: TIMESTAMP
+        order_inserts: true
+        order_updates: true
+        query:
+          plan_cache_max_size: 64
+
+  # 한국 시간대 설정 추가 (dev 프로파일에서 누락되었던 부분)
+  jackson:
+    time-zone: Asia/Seoul
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+
+  sql:
+    init:
+      mode: never
+
+# 서버 설정
+server:
+  port: 5000
+  servlet:
+    context-path: /api/v1
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+    include-exception: false
+  tomcat:
+    basedir: ./temp  # Custom temp directory for Tomcat
+    max-http-form-post-size: 2MB
+    max-swallow-size: 2MB
+
+# 메모리 사용량 최적화를 위한 JVM 설정
+# 메트릭/Actuator 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
 
 ---
 # 개발 환경 설정
@@ -79,19 +185,113 @@ spring:
   config:
     activate:
       on-profile: dev
-    import: application-secret.yml
-  
-  # H2 데이터베이스 설정
+
   datasource:
-    url: jdbc:h2:file:./data/tracedb
-    username: sa
-    password: 
-    driver-class-name: org.h2.Driver
-  
-  # H2 콘솔 활성화
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      settings:
-        web-allow-others: false
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST}:3306/ebdb?serverTimezone=Asia/Seoul&connectionTimeZone=Asia/Seoul&forceConnectionTimeZoneToSession=true&useLegacyDatetimeCode=false
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+      connection-timeout: 30000
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: false
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        jdbc:
+          time_zone: Asia/Seoul
+          batch_size: 20
+        timezone:
+          default_storage: NORMALIZE
+        type:
+          preferred_instant_jdbc_type: TIMESTAMP
+        order_inserts: true
+        order_updates: true
+        query:
+          plan_cache_max_size: 64
+
+  # 한국 시간대 설정 추가 (dev 프로파일에서 누락되었던 부분)
+  jackson:
+    time-zone: Asia/Seoul
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+
+  sql:
+    init:
+      mode: never
+
+# 서버 설정
+server:
+  port: 5000
+  servlet:
+    context-path: /api/v1
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+    include-exception: false
+  tomcat:
+    basedir: ./temp  # Custom temp directory for Tomcat
+    max-http-form-post-size: 2MB
+    max-swallow-size: 2MB
+
+
+---
+# 로컬 환경 설정
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  sql:
+    init:
+      mode: never
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/tracedb?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: ${LOCAL_MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update  # 개발 시에는 update, 운영은 validate or none
+    show-sql: true
+    database-platform: org.hibernate.dialect.MySQLDialect
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          time_zone: Asia/Seoul
+        timezone:
+          default_storage: NORMALIZE
+
+  jackson:
+    time-zone: Asia/Seoul
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+
+  app:
+    base-url: http://localhost:8080/api/v1
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+    include-exception: false
+  tomcat:
+    basedir: ./temp
+

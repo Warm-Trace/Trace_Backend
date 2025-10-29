@@ -1,20 +1,188 @@
 package com.example.trace.user;
 
+import com.example.trace.auth.Util.JwtUtil;
+import com.example.trace.auth.dto.PrincipalDetails;
+import com.example.trace.file.FileType;
+import com.example.trace.file.S3UploadService;
+import com.example.trace.global.response.CursorResponse;
+import com.example.trace.post.dto.cursor.MyPagePostRequest;
+import com.example.trace.post.dto.post.PostFeedDto;
+import com.example.trace.post.service.PostService;
+import com.example.trace.report.service.UserBlockService;
+import com.example.trace.user.domain.User;
+import com.example.trace.user.dto.AttendanceResponse;
+import com.example.trace.user.dto.BlockedUserProfileDto;
+import com.example.trace.user.dto.UpdateNickNameRequest;
 import com.example.trace.user.dto.UserDto;
-import com.example.trace.user.dto.UserInfoRequest;
+import com.example.trace.user.dto.UserVerificationInfo;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/user")
+@RequestMapping("/user")
+@Tag(name = "User", description = "사용자 정보 API")
+@Slf4j
 public class UserController {
     private final UserService userService;
+    private final UserBlockService userBlockService;
+    private final JwtUtil jwtUtil;
+    private final S3UploadService s3UploadService;
+    private final PostService postService;
 
-    @PostMapping
-    public ResponseEntity<UserDto> getUserInfo(@RequestBody  UserInfoRequest userInfoRequest) {
-        UserDto userDto = userService.getUserInfo(userInfoRequest);
+    @Operation(summary = "유저 정보 조회", description = "유저 정보를 가져옵니다.")
+    @ApiResponse(
+            responseCode = "200",
+            description = "User information retrieved successfully.",
+            content = @Content(
+                    mediaType = "application/json", schema = @Schema(implementation = UserDto.class)
+            )
+    )
+    @GetMapping
+    public ResponseEntity<UserDto> getUserInfo(HttpServletRequest request) {
+        String token = jwtUtil.resolveAccessToken(request);
+        String providerId = jwtUtil.getProviderId(token);
+        UserDto userDto = userService.getUserInfo(providerId);
         return ResponseEntity.ok(userDto);
+    }
+
+    @Operation(summary = "다른 유저의 프로필 조회", description = "다른 유저의 프로필 정보를 가져옵니다.")
+    @GetMapping("{providerId}/profile")
+    public ResponseEntity<?> getUserProfile(
+            @AuthenticationPrincipal PrincipalDetails principalDetails,
+            @PathVariable String providerId) {
+        String currentUserProviderId = principalDetails.getUser().getProviderId();
+
+        // 차단된 사용자인지 확인
+        if (userBlockService.isBlocked(currentUserProviderId, providerId)) {
+            BlockedUserProfileDto blockedProfile = userService.getBlockedUserProfile(currentUserProviderId, providerId);
+            return ResponseEntity.ok(blockedProfile);
+        }
+        // 일반 프로필 조회
+        UserDto userDto = userService.getUserInfo(providerId);
+        return ResponseEntity.ok(userDto);
+    }
+
+    @PostMapping("{providerId}/posts")
+    @Operation(summary = "다른 유저의 게시글 조회", description = "탭 별로 다른 유저의 게시글을 조회합니다.")
+    public ResponseEntity<CursorResponse<PostFeedDto>> getUserPagePosts(
+            @RequestBody MyPagePostRequest request,
+            @PathVariable String providerId) {
+        CursorResponse<PostFeedDto> response = postService.getMyPagePostsWithCursor(request, providerId);
+        return ResponseEntity.ok(response);
+    }
+
+
+    @Operation(summary = "유저 프로필 이미지 수정", description = "프로필 이미지를 수정합니다.")
+    @PutMapping(value = "/profile/image", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<UserDto> updateUserProfileImage(
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
+            @AuthenticationPrincipal PrincipalDetails principalDetails) throws IOException {
+
+        User user = principalDetails.getUser();
+        String providerId = user.getProviderId();
+
+        // 프로필 이미지 S3 업로드 후 URL 획득
+        String imageUrl = null;
+        if (profileImage != null && !profileImage.isEmpty()) {
+            imageUrl = s3UploadService.saveFile(profileImage, FileType.PROFILE, providerId);
+        }
+
+        return ResponseEntity.ok(userService.updateUserProfileImage(providerId, imageUrl));
+    }
+
+    @Operation(summary = "유저 닉네임 수정", description = "유저 닉네임을 수정합니다.")
+    @PutMapping("profile/nickname")
+    public ResponseEntity<UserDto> updateUserNickName(
+            @RequestBody UpdateNickNameRequest request,
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
+        User user = principalDetails.getUser();
+        return ResponseEntity.ok(userService.updateUserNickName(user, request));
+    }
+
+
+    @Operation(summary = "로그아웃", description = "로그아웃 합니다.")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Logout successful.",
+            content = @Content(
+                    mediaType = "application/json"
+            )
+    )
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        String accessToken = jwtUtil.resolveAccessToken(request);
+        userService.logout(accessToken);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "회원탈퇴", description = "회원탈퇴 합니다.")
+    @ApiResponse(
+            responseCode = "200",
+            description = "account deletion successful.",
+            content = @Content(
+                    mediaType = "application/json"
+            )
+    )
+    @PostMapping("/delete")
+    public ResponseEntity<?> deleteUser(HttpServletRequest request) {
+        String accessToken = jwtUtil.resolveAccessToken(request);
+        userService.deleteUser(accessToken);
+        return ResponseEntity.ok().build();
+    }
+
+
+    @PostMapping("/myPosts")
+    @Operation(summary = "마이페이지 게시글 조회", description = "탭 별로 마이페이지 게시글을 조회합니다.")
+    public ResponseEntity<CursorResponse<PostFeedDto>> getMyPagePosts(
+            @RequestBody MyPagePostRequest request,
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
+        String providerId = principalDetails.getUser().getProviderId();
+        CursorResponse<PostFeedDto> response = postService.getMyPagePostsWithCursor(request, providerId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/verifications")
+    @Operation(summary = "사용자의 인증 개수 정보 조회", description = "사용자의 인증 개수 정보를 조회합니다.")
+    public ResponseEntity<UserVerificationInfo> getUserVerificationInfo(
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
+        User user = principalDetails.getUser();
+        return ResponseEntity.ok(userService.getUserVerificationInfo(user));
+    }
+
+    @PostMapping("/attendance")
+    @Operation(summary = "출석 체크", description = "출석 체크 이후 포인트가 지급됩니다.")
+    public ResponseEntity<?> attend(@AuthenticationPrincipal PrincipalDetails userDetails) {
+        User user = userDetails.getUser();
+        AttendanceResponse response = userService.attend(user);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/attendance/today")
+    @Operation(summary = "오늘 출석 체크 유무 확인", description = "출석 유무를 확인합니다.")
+    public ResponseEntity<?> todayAttendance(@AuthenticationPrincipal PrincipalDetails userDetails) {
+        Long userId = userDetails.getUser().getId();
+        boolean todayAttendance = userService.getTodayAttendance(userId);
+        return ResponseEntity.ok(todayAttendance);
     }
 }
