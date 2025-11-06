@@ -2,8 +2,8 @@ name: CI-CD (Trace)
 
 on:
   push:
-    branches: [ "develop" ]        # develop에 푸시될 때 동작
-  workflow_dispatch:               # 수동 실행 허용
+    branches: [ "develop" ]
+  workflow_dispatch:
 
 jobs:
   build-and-push:
@@ -17,7 +17,7 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: corretto   # 운영 컨테이너와 맞춤(Corretto 17)
+          distribution: corretto
           java-version: 17
           cache: gradle
 
@@ -32,6 +32,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx (docker-container)
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+          driver: docker-container
 
       - name: Build and push (latest)
         uses: docker/build-push-action@v6
@@ -58,7 +64,7 @@ jobs:
       - name: Add SSH key
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}   # PEM 내용 전체
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
       - name: Known hosts
         run: |
@@ -67,8 +73,8 @@ jobs:
 
       - name: Deploy (pull & restart)
         env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}            # 예: 3.x.x.x
-          EC2_USER: ${{ secrets.EC2_USER }}            # 예: ec2-user / ubuntu
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
           IMAGE: ${{ needs.build-and-push.outputs.image }}
 
           # 앱 환경변수(Secrets)
@@ -84,7 +90,7 @@ jobs:
           CONTAINER: trace-app
           PORT_MAP: 80:5000
         run: |
-          ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << EOF
           set -e
 
           echo "[Deploy] Pull image: ${IMAGE}"
