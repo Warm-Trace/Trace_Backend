@@ -29,7 +29,7 @@ spring:
 cloud:
   aws:
     s3:
-      bucket: wap-trace-bucket
+      bucket: trace-bucket25
     region:
       static: ap-northeast-2
       auto: false
