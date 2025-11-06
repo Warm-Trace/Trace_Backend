@@ -75,7 +75,9 @@ jobs:
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
-          IMAGE: ${{ needs.build-and-push.outputs.image }}
+
+          # 이미지 태그를 직접 지정해 비어있지 않도록 고정
+          IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/trace:latest
 
           # 앱 환경변수(Secrets)
           DB_HOST: ${{ secrets.DB_HOST }}
